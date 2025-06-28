@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { useSavedPostStore } from '@/store/savedpoststore';
-import { useAuthStore } from '@/store/authstore';
 import PostCard from '../components/PostCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Bookmark, RefreshCw } from 'lucide-react';
 
 const SavedPostsPage = () => {
     const { savedPosts, fetchSavedPosts, isLoading, error } = useSavedPostStore();
-    const { authUser } = useAuthStore();
+   
 
     useEffect(() => {
         fetchSavedPosts();
