@@ -146,7 +146,6 @@ const useLikeStore = create((set, get) => ({
             }
             return false;
         } catch (error) {
-            console.error('Error checking like status:', error);
             return false;
         }
     },
@@ -164,7 +163,6 @@ const useLikeStore = create((set, get) => ({
             }
             return 0;
         } catch (error) {
-            console.error('Error getting like count:', error);
             return 0;
         }
     },

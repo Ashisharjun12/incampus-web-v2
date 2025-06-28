@@ -123,7 +123,6 @@ const useFollowStore = create((set, get) => ({
             const response = await followAPI.checkFollowStatus(userId);
             return response.data.data.isFollowing;
         } catch (error) {
-            console.error('Error checking follow status:', error);
             return false;
         }
     },

@@ -202,10 +202,6 @@ const EditPostPage = () => {
       const existingImages = post.images || [];
       const existingVideos = post.videos || [];
       
-      console.log('🔍 Debug - Original post images:', existingImages);
-      console.log('🔍 Debug - Original post videos:', existingVideos);
-      console.log('🔍 Debug - Current mediaPreviews:', mediaPreviews);
-      
       // Filter out existing media that were removed by user
       const remainingImages = existingImages.filter(imgUrl => 
         mediaPreviews.some(preview => preview.url === imgUrl && preview.type === 'image')
@@ -214,29 +210,21 @@ const EditPostPage = () => {
         mediaPreviews.some(preview => preview.url === videoUrl && preview.type === 'video')
       );
 
-      console.log('🔍 Debug - Remaining images after filter:', remainingImages);
-      console.log('🔍 Debug - Remaining videos after filter:', remainingVideos);
-
       let finalImageUrls = [...remainingImages];
       let finalVideoUrls = [...remainingVideos];
 
       // Upload new files if any
       if (mediaFiles.length > 0) {
-        console.log('🔍 Debug - New mediaFiles to upload:', mediaFiles);
         const imageBlobs = mediaFiles.filter(f => f.type === 'image').map(f => f.file);
         const videoBlobs = mediaFiles.filter(f => f.type === 'video').map(f => f.file);
         
         if (imageBlobs.length > 0) {
-          console.log('🔍 Debug - Uploading new images:', imageBlobs.length);
           const res = await uploadAPI.uploadImages(imageBlobs, 'posts');
           finalImageUrls = [...finalImageUrls, ...res.data.data.map(item => item.url)];
-          console.log('🔍 Debug - New image URLs:', res.data.data.map(item => item.url));
         }
         if (videoBlobs.length > 0) {
-          console.log('🔍 Debug - Uploading new video:', videoBlobs.length);
           const res = await uploadAPI.uploadVideo(videoBlobs[0], 'posts');
           finalVideoUrls = [...finalVideoUrls, res.data.data.url];
-          console.log('🔍 Debug - New video URL:', res.data.data.url);
         }
       }
       setIsUploading(false);
@@ -248,8 +236,6 @@ const EditPostPage = () => {
         videos: finalVideoUrls,
         communityId: selectedCommunity,
       };
-
-      console.log('🔍 Debug - Final payload being sent:', payload);
 
       await postAPI.update(id, payload);
       toast.success('Post updated successfully!');

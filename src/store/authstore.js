@@ -76,7 +76,8 @@ export const useAuthStore = create(
         try {
           await authAPI.logout();
         } catch (error) {
-          console.error('Logout error:', error);
+          // Silent error handling for logout
+          console.log("logout error",error);
         }
         localStorage.removeItem('token');
         set({ authUser: null, isLoading: false, isSuspended: false });
