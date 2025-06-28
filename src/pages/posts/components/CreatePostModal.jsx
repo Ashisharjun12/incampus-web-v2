@@ -6,25 +6,23 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { uploadAPI, communityAPI, postAPI, authAPI } from '@/api/api';
 import { useAuthStore } from '@/store/authstore';
 import MentionInput from '@/components/ui/MentionInput';
 import { 
-    Type, 
     Image, 
     Video, 
     X, 
     Loader2, 
     AlertTriangle, 
-    Globe, 
-    Search,
-    Building2,
-    Users,
-    Crown,
-    ChevronDown
+    ChevronDown, 
+    Eye, 
+    Paperclip, 
+    Smile, 
+    Send
 } from 'lucide-react';
 import {
     DropdownMenu,
@@ -37,29 +35,19 @@ const CreatePostModal = ({ open, onOpenChange, onPostCreated }) => {
     const { authUser } = useAuthStore();
     const [isLoading, setIsLoading] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [activeTab, setActiveTab] = useState('text');
-    
-    // Form state
     const [caption, setCaption] = useState('');
     const [selectedCommunity, setSelectedCommunity] = useState('');
     const [isNsfw, setIsNsfw] = useState(false);
-    
-    // Media state
     const [mediaFiles, setMediaFiles] = useState([]);
     const [mediaPreviews, setMediaPreviews] = useState([]);
-    
-    // Community state
     const [communities, setCommunities] = useState([]);
     const [allCommunities, setAllCommunities] = useState([]);
-    const [userCreatedCommunities, setUserCreatedCommunities] = useState([]);
-    const [collegeCommunities, setCollegeCommunities] = useState([]);
-    const [communityFilter, setCommunityFilter] = useState('all'); // 'all', 'college', 'created'
     const [communitySearch, setCommunitySearch] = useState('');
     const [showCommunitySelector, setShowCommunitySelector] = useState(false);
     const [userProfile, setUserProfile] = useState(null);
-    
     const imageInputRef = useRef(null);
     const videoInputRef = useRef(null);
+    const [communityTab, setCommunityTab] = useState('all'); // 'all', 'mine', 'college'
 
     useEffect(() => {
         if (open) {
@@ -69,32 +57,17 @@ const CreatePostModal = ({ open, onOpenChange, onPostCreated }) => {
 
     const loadUserProfileAndCommunities = async () => {
         try {
-            // Load user profile first to get college info
             const profileResponse = await authAPI.getProfile();
             if (profileResponse.data.success) {
                 setUserProfile(profileResponse.data.data);
             }
-
-            // Load all communities
             const allResponse = await communityAPI.getAll();
             if (allResponse.data.success) {
                 setAllCommunities(allResponse.data.data);
             }
-
-            // Load user's joined communities
             const userResponse = await communityAPI.getUserCommunities();
             if (userResponse.data.success) {
                 setCommunities(userResponse.data.data);
-            }
-
-            // Filter user created communities
-            const created = allResponse.data.data.filter(c => c.createdById === authUser?.id);
-            setUserCreatedCommunities(created);
-
-            // Filter college communities using profile data
-            if (profileResponse.data.success && profileResponse.data.data.collegeId) {
-                const college = allResponse.data.data.filter(c => c.collegeId === profileResponse.data.data.collegeId);
-                setCollegeCommunities(college);
             }
         } catch (error) {
             toast.error('Failed to load communities.');
@@ -102,48 +75,35 @@ const CreatePostModal = ({ open, onOpenChange, onPostCreated }) => {
     };
 
     const getFilteredCommunities = () => {
-        let filtered = [];
-        
-        switch (communityFilter) {
-            case 'college':
-                filtered = collegeCommunities;
-                break;
-            case 'created':
-                filtered = userCreatedCommunities;
-                break;
-            case 'all':
-            default:
-                filtered = allCommunities;
-                break;
+        let filtered = allCommunities;
+        if (communityTab === 'mine') {
+            filtered = filtered.filter(c => c.createdById === authUser?.id);
+        } else if (communityTab === 'college' && userProfile?.collegeId) {
+            filtered = filtered.filter(c => c.collegeId === userProfile.collegeId);
         }
-
         if (communitySearch) {
             filtered = filtered.filter(c => 
                 c.name.toLowerCase().includes(communitySearch.toLowerCase()) ||
                 c.description?.toLowerCase().includes(communitySearch.toLowerCase())
             );
         }
-
         return filtered;
     };
 
     const handleFileSelect = (event, type) => {
         const files = Array.from(event.target.files);
         if (files.length === 0) return;
-
         if (type === 'image' && (mediaFiles.length + files.length) > 10) {
             return toast.error("You can't upload more than 10 images.");
         }
         if (type === 'video' && files.length > 1) {
             return toast.error("You can only upload one video.");
         }
-
         const newFiles = files.map(file => ({ file, type }));
         const newPreviews = files.map(file => ({
             url: URL.createObjectURL(file),
             type: file.type
         }));
-
         if (type === 'image') {
             setMediaFiles(prev => [...prev, ...newFiles]);
             setMediaPreviews(prev => [...prev, ...newPreviews]);
@@ -176,18 +136,14 @@ const CreatePostModal = ({ open, onOpenChange, onPostCreated }) => {
     const handleSubmit = async () => {
         if (!selectedCommunity) return toast.error('Please select a community.');
         if (!caption && mediaFiles.length === 0) return toast.error('Your post has no content.');
-
         setIsLoading(true);
         setIsUploading(true);
-
         try {
             let imageUrls = [];
             let videoUrls = [];
-
             if (mediaFiles.length > 0) {
                 const imageBlobs = mediaFiles.filter(f => f.type === 'image').map(f => f.file);
                 const videoBlobs = mediaFiles.filter(f => f.type === 'video').map(f => f.file);
-                
                 if (imageBlobs.length > 0) {
                     const res = await uploadAPI.uploadImages(imageBlobs, 'posts');
                     imageUrls = res.data.data.map(item => item.url);
@@ -198,7 +154,6 @@ const CreatePostModal = ({ open, onOpenChange, onPostCreated }) => {
                 }
             }
             setIsUploading(false);
-
             const payload = {
                 caption,
                 communityId: selectedCommunity,
@@ -206,13 +161,10 @@ const CreatePostModal = ({ open, onOpenChange, onPostCreated }) => {
                 videos: videoUrls,
                 isNsfw,
             };
-
             const response = await postAPI.create(payload);
-            console.log('🔄 CreatePostModal: API response:', response.data);
             toast.success('Post created successfully!');
             onPostCreated?.(response.data.data);
             handleClose();
-
         } catch (error) {
             const errorMsg = error.response?.data?.reason || error.response?.data?.message || 'Failed to create post.';
             toast.error(errorMsg);
@@ -226,253 +178,189 @@ const CreatePostModal = ({ open, onOpenChange, onPostCreated }) => {
         return community ? `c/${community.name}` : 'Choose a community...';
     };
 
-    const CommunitySelector = () => (
-        <div className="space-y-3">
-            {/* Filter Tabs */}
-            <div className="flex space-x-1 bg-muted/50 p-1 rounded-lg">
-                <button
-                    onClick={() => setCommunityFilter('all')}
-                    className={`flex-1 px-3 py-2 text-sm rounded-md transition-colors ${
-                        communityFilter === 'all' 
-                            ? 'bg-background text-foreground shadow-sm' 
-                            : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                >
-                    <Globe className="h-4 w-4 mr-2 inline" />
-                    All
-                </button>
-                <button
-                    onClick={() => setCommunityFilter('college')}
-                    className={`flex-1 px-3 py-2 text-sm rounded-md transition-colors ${
-                        communityFilter === 'college' 
-                            ? 'bg-background text-foreground shadow-sm' 
-                            : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                >
-                    <Building2 className="h-4 w-4 mr-2 inline" />
-                    College
-                </button>
-                <button
-                    onClick={() => setCommunityFilter('created')}
-                    className={`flex-1 px-3 py-2 text-sm rounded-md transition-colors ${
-                        communityFilter === 'created' 
-                            ? 'bg-background text-foreground shadow-sm' 
-                            : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                >
-                    <Crown className="h-4 w-4 mr-2 inline" />
-                    Mine
-                </button>
-            </div>
-
-            {/* Search */}
-            <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                    placeholder="Search communities..."
-                    value={communitySearch}
-                    onChange={(e) => setCommunitySearch(e.target.value)}
-                    className="pl-9 bg-muted/50 border-0 focus:bg-background"
-                />
-            </div>
-
-            {/* Community List */}
-            <div className="max-h-60 overflow-y-auto space-y-1">
-                {getFilteredCommunities().map(community => (
-                    <button
-                        key={community.id}
-                        onClick={() => {
-                            setSelectedCommunity(community.id);
-                            setShowCommunitySelector(false);
-                        }}
-                        className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors hover:bg-muted/50 ${
-                            selectedCommunity === community.id ? 'bg-primary/10 border border-primary/20' : ''
-                        }`}
-                    >
-                        <Avatar className="h-8 w-8">
-                            <AvatarImage src={community.logoUrl} />
-                            <AvatarFallback>{community.name?.charAt(0).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                                <span className="font-medium truncate">c/{community.name}</span>
-                                {community.isNsfw && (
-                                    <span className="text-red-500 text-xs bg-red-100 px-1 rounded">NSFW</span>
-                                )}
-                            </div>
-                            <p className="text-sm text-muted-foreground truncate">
-                                {community.memberCount || 0} members
-                            </p>
-                        </div>
-                    </button>
-                ))}
-                {getFilteredCommunities().length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                        <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p>No communities found</p>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-    
+    // --- Threads-style UI ---
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-white/80 dark:bg-[#18181b]/80 backdrop-blur-xl shadow-2xl border-0 rounded-3xl">
-                <DialogHeader className="pb-4 border-b border-border/50">
-                    <DialogTitle className="text-xl font-semibold">New Post</DialogTitle>
-                </DialogHeader>
-                {/* All content, no extra flex/scroll wrappers */}
-                {/* Community Selector */}
-                <div className="mb-4 pt-4">
-                    <DropdownMenu open={showCommunitySelector} onOpenChange={setShowCommunitySelector}>
-                        <DropdownMenuTrigger asChild>
-                            <Button 
-                                variant="ghost" 
-                                className="w-full justify-between h-12 px-0 hover:bg-white/60 dark:hover:bg-gray-900/60 rounded-xl shadow"
-                            >
-                                <div className="flex items-center gap-2">
-                                    {selectedCommunity && (
-                                        <Avatar className="h-10 w-10 shadow border-2 border-white dark:border-gray-800">
-                                            <AvatarImage src={allCommunities.find(c => c.id === selectedCommunity)?.logoUrl} />
-                                            <AvatarFallback>
-                                                {allCommunities.find(c => c.id === selectedCommunity)?.name?.charAt(0).toUpperCase()}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                    )}
-                                    <span className={selectedCommunity ? 'font-medium' : 'text-muted-foreground'}>
-                                        {getSelectedCommunityName()}
-                                    </span>
-                                </div>
-                                <ChevronDown className="h-4 w-4" />
+            <DialogContent className="sm:max-w-xl w-full p-0 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl shadow-lg">
+                <div className="flex flex-col w-full">
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-5 pt-5 pb-2 border-b border-gray-100 dark:border-gray-800">
+                        <DialogTitle className="text-lg font-semibold text-gray-900 dark:text-white">Create Post</DialogTitle>
+                        <DialogClose asChild>
+                            <Button type="button" variant="ghost" onClick={handleClose} className="text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full p-2">
+                               
                             </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-96 p-4 bg-white/80 dark:bg-[#23272f]/80 backdrop-blur-xl shadow-xl rounded-2xl border-0" align="start">
-                            <CommunitySelector />
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-                {/* Content Tabs */}
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
-                    <TabsList className="grid w-full grid-cols-3 mb-4 bg-muted/50">
-                        <TabsTrigger value="text" className="flex items-center gap-2 data-[state=active]:bg-background">
-                            <Type className="h-4 w-4" />
-                            Text
-                        </TabsTrigger>
-                        <TabsTrigger value="image" className="flex items-center gap-2 data-[state=active]:bg-background">
-                            <Image className="h-4 w-4" />
-                            Image
-                        </TabsTrigger>
-                        <TabsTrigger value="video" className="flex items-center gap-2 data-[state=active]:bg-background">
-                            <Video className="h-4 w-4" />
-                            Video
-                        </TabsTrigger>
-                    </TabsList>
-                    <div className="space-y-4">
-                        {/* Content Input */}
-                        <div className="relative">
+                        </DialogClose>
+                    </div>
+                    {/* Main content */}
+                    <div className="flex px-5 pt-4 pb-2">
+                        {/* Avatar and thread line */}
+                        <div className="flex flex-col items-center mr-4">
+                            <Avatar className="h-10 w-10">
+                                <AvatarImage src={authUser?.avatarUrl || authUser?.googleAvatarUrl} />
+                                <AvatarFallback className="bg-gray-200 text-gray-600 font-bold">
+                                    {authUser?.username?.charAt(0).toUpperCase() || '?'}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 w-px bg-gray-200 dark:bg-gray-800 mt-1" style={{ minHeight: 60 }} />
+                        </div>
+                        {/* Input and media */}
+                        <div className="flex-1 flex flex-col">
+                            {/* Community tabs and selector */}
+                            <div className="mb-2">
+                                <div className="flex gap-2 mb-2">
+                                    {['all', 'mine', 'college'].map(tab => (
+                                        <button
+                                            key={tab}
+                                            onClick={() => setCommunityTab(tab)}
+                                            className={`px-3 py-1 text-sm font-medium rounded-full transition-colors duration-150 focus:outline-none
+                                                ${communityTab === tab ? 'text-black dark:text-white border-b-2 border-black dark:border-white' : 'text-gray-400 hover:text-black dark:hover:text-white'}`}
+                                        >
+                                            {tab === 'all' ? 'All' : tab === 'mine' ? 'Mine' : 'College'}
+                                        </button>
+                                    ))}
+                                </div>
+                                <DropdownMenu open={showCommunitySelector} onOpenChange={setShowCommunitySelector}>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button 
+                                            variant="outline" 
+                                            className="w-full justify-between h-10 px-3 text-sm font-normal border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                                        >
+                                            <span className={selectedCommunity ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}>
+                                                {getSelectedCommunityName()}
+                                            </span>
+                                            <ChevronDown className="h-4 w-4 text-gray-400" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="w-80 p-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg" align="start">
+                                        <Input
+                                            placeholder="Search communities..."
+                                            value={communitySearch}
+                                            onChange={(e) => setCommunitySearch(e.target.value)}
+                                            className="mb-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded"
+                                        />
+                                        <div className="max-h-56 overflow-y-auto">
+                                            {getFilteredCommunities().map(community => (
+                                                <button
+                                                    key={community.id}
+                                                    onClick={() => {
+                                                        setSelectedCommunity(community.id);
+                                                        setShowCommunitySelector(false);
+                                                    }}
+                                                    className={`w-full flex items-center gap-3 p-2 rounded-lg text-left hover:bg-gray-100 dark:hover:bg-gray-800 ${selectedCommunity === community.id ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
+                                                >
+                                                    <Avatar className="h-7 w-7">
+                                                        <AvatarImage src={community.logoUrl} />
+                                                        <AvatarFallback>{community.name?.charAt(0).toUpperCase()}</AvatarFallback>
+                                                    </Avatar>
+                                                    <span className="truncate">c/{community.name}</span>
+                                                </button>
+                                            ))}
+                                            {getFilteredCommunities().length === 0 && (
+                                                <div className="text-center py-4 text-gray-400 text-sm">No communities found</div>
+                                            )}
+                                        </div>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                            {/* MentionInput instead of Textarea */}
                             <MentionInput
                                 value={caption}
                                 onChange={setCaption}
-                                placeholder="What's happening?"
-                                className="min-h-[120px] resize-none border-0 focus:ring-0 text-lg bg-transparent placeholder:text-muted-foreground"
+                                placeholder="Start a thread..."
+                                className="w-full min-h-[90px] border-none bg-transparent text-lg focus:ring-0 focus:outline-none resize-none placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                 showGifButton={false}
                                 showPostButton={false}
                             />
-                        </div>
-                        {/* Media Upload */}
-                        {activeTab === 'image' && (
-                            <div>
-                                <input 
-                                    ref={imageInputRef} 
-                                    type="file" 
-                                    multiple 
-                                    accept="image/*" 
-                                    className="hidden" 
-                                    onChange={(e) => handleFileSelect(e, 'image')} 
-                                />
-                                <Button 
-                                    variant="ghost" 
-                                    onClick={() => imageInputRef.current.click()}
-                                    className="w-full h-12 hover:bg-white/60 dark:hover:bg-gray-900/60 rounded-xl shadow"
-                                >
-                                    <Image className="h-4 w-4 mr-2" />
-                                    Add Images
-                                </Button>
-                            </div>
-                        )}
-                        {activeTab === 'video' && (
-                            <div>
-                                <input 
-                                    ref={videoInputRef} 
-                                    type="file" 
-                                    accept="video/*" 
-                                    className="hidden" 
-                                    onChange={(e) => handleFileSelect(e, 'video')} 
-                                />
-                                <Button 
-                                    variant="ghost" 
-                                    onClick={() => videoInputRef.current.click()}
-                                    className="w-full h-12 hover:bg-white/60 dark:hover:bg-gray-900/60 rounded-xl shadow"
-                                >
-                                    <Video className="h-4 w-4 mr-2" />
-                                    Add Video
-                                </Button>
-                            </div>
-                        )}
-                        {/* Media Previews */}
-                        {mediaPreviews.length > 0 && (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                {mediaPreviews.map((p, i) => (
-                                    <div key={i} className="relative aspect-square">
-                                        <img 
-                                            src={p.url} 
-                                            className="w-full h-full object-cover rounded-xl shadow-lg" 
-                                            alt="Preview"
-                                        />
-                                        <Button 
-                                            size="sm" 
-                                            variant="destructive" 
-                                            className="absolute top-2 right-2 h-6 w-6 p-0 rounded-full shadow"
-                                            onClick={() => removeMedia(i)}
-                                        >
-                                            <X className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                        {/* Settings */}
-                        <div className="flex justify-end pt-4 border-t border-border/50">
-                            <div className="flex items-center space-x-2">
-                                <Switch 
-                                    id="nsfw-switch" 
-                                    checked={isNsfw} 
-                                    onCheckedChange={setIsNsfw} 
-                                />
-                                <Label htmlFor="nsfw-switch" className="flex items-center gap-1 text-sm">
-                                    <AlertTriangle className="h-4 w-4 text-orange-500" />
-                                    NSFW
-                                </Label>
-                            </div>
+                            {/* Media preview */}
+                            {mediaPreviews.length > 0 && (
+                                <div className="flex gap-2 mt-2">
+                                    {mediaPreviews.map((p, i) => (
+                                        <div key={i} className="relative">
+                                            <img 
+                                                src={p.url} 
+                                                className="h-20 w-20 object-cover rounded-lg border border-gray-200 dark:border-gray-700" 
+                                                alt="Preview"
+                                            />
+                                            <Button 
+                                                size="icon" 
+                                                variant="ghost" 
+                                                className="absolute -top-2 -right-2 h-7 w-7 p-0 rounded-full bg-white dark:bg-black border border-gray-200 dark:border-gray-700"
+                                                onClick={() => removeMedia(i)}
+                                            >
+                                                <X className="h-4 w-4 text-gray-500" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
-                </Tabs>
-                <DialogFooter className="pt-4 border-t-0 bg-white/60 dark:bg-[#23272f]/60 backdrop-blur-xl rounded-b-3xl shadow-lg">
-                    <DialogClose asChild>
-                        <Button type="button" variant="ghost" onClick={handleClose}>
-                            Cancel
+                    {/* NSFW warning */}
+                    {isNsfw && (
+                        <Alert className="mx-5 mb-2 border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-800">
+                            <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                            <AlertDescription className="text-yellow-800 dark:text-yellow-200 font-medium">
+                                <strong>NSFW Content Warning:</strong> You've enabled NSFW mode. This allows you to post 18+ content. Please comply with guidelines.
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                    {/* Action row */}
+                    <div className="flex items-center gap-3 px-5 py-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-black rounded-b-2xl">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => imageInputRef.current.click()}
+                            className="hover:bg-gray-100 dark:hover:bg-gray-800"
+                            title="Add image"
+                        >
+                            <Image className="h-5 w-5 text-gray-500" />
                         </Button>
-                    </DialogClose>
-                    <Button 
-                        onClick={handleSubmit} 
-                        disabled={isLoading || !selectedCommunity}
-                       
-                    >
-                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {isUploading ? 'Uploading...' : isLoading ? 'Posting...' : 'Post'}
-                    </Button>
-                </DialogFooter>
+                        <input 
+                            ref={imageInputRef} 
+                            type="file" 
+                            multiple 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={(e) => handleFileSelect(e, 'image')} 
+                        />
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => videoInputRef.current.click()}
+                            className="hover:bg-gray-100 dark:hover:bg-gray-800"
+                            title="Add video"
+                        >
+                            <Video className="h-5 w-5 text-gray-500" />
+                        </Button>
+                        <input 
+                            ref={videoInputRef} 
+                            type="file" 
+                            accept="video/*" 
+                            className="hidden" 
+                            onChange={(e) => handleFileSelect(e, 'video')} 
+                        />
+                        <div className="flex-1" />
+                        <div className="flex items-center gap-2">
+                            <Switch 
+                                id="nsfw-switch" 
+                                checked={isNsfw} 
+                                onCheckedChange={setIsNsfw}
+                                className="data-[state=checked]:bg-yellow-500"
+                            />
+                            <Label htmlFor="nsfw-switch" className="text-xs text-gray-500 dark:text-gray-400">NSFW</Label>
+                        </div>
+                        <Button 
+                            onClick={handleSubmit} 
+                            disabled={isLoading || !selectedCommunity}
+                            className="ml-2 px-5 py-2 rounded-full bg-black dark:bg-white text-white dark:text-black font-semibold text-base shadow-none border-none disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Post'}
+                        </Button>
+                    </div>
+                </div>
             </DialogContent>
         </Dialog>
     );

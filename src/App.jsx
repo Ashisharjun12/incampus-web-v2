@@ -9,6 +9,8 @@ import AdminLayout from './pages/admin/layout/AdminLayout';
 import Dashboard from './pages/admin/pages/Dashboard';
 import CollegesPage from './pages/admin/pages/Colleges';
 import Communities from './pages/admin/pages/Communities';
+import Users from './pages/admin/pages/Users';
+import UserDetails from './pages/admin/pages/UserDetails';
 import AIConfig from './pages/admin/pages/AIConfig';
 import BadWordsManagement from './pages/admin/pages/BadWordsManagement';
 import { useAuthStore } from './store/authstore';
@@ -21,11 +23,11 @@ import Search from './pages/home/components/Search';
 import EditPostPage from './pages/posts/pages/EditPostPage';
 import SavedPostsPage from './pages/posts/pages/SavedPostsPage';
 import PostDetail from './pages/posts/pages/PostDetail';
-
-
+import SuspendedUser from './components/SuspendedUser';
+import SuspensionGuard from './components/SuspensionGuard';
 
 const App = () => {
-  const { authUser, isLoading, checkAuth } = useAuthStore();
+  const { authUser, isLoading, isSuspended, checkAuth } = useAuthStore();
 
   useEffect(() => {
     checkAuth();
@@ -39,6 +41,11 @@ const App = () => {
     );
   }
 
+  // If user is suspended or deleted, show the SuspendedUser component immediately
+  if (authUser && isSuspended) {
+    return <SuspendedUser />;
+  }
+
   const ProtectedRoutes = () => {
     if (!authUser) return <Navigate to="/login" replace />;
     if (!authUser.isProfileComplete) return <Navigate to="/onboarding" replace />;
@@ -48,12 +55,14 @@ const App = () => {
   const OnboardingRoute = () => {
     if (!authUser) return <Navigate to="/login" replace />;
     if (authUser.isProfileComplete) return <Navigate to="/" replace />;
+    if (isSuspended) return <Navigate to="/login" replace />;
     return <Onboarding />;
   }
 
   const AdminRoutes = () => {
     if (!authUser) return <Navigate to="/login" replace />;
     if (authUser.role !== 'admin') return <Navigate to="/" replace />;
+    if (isSuspended) return <Navigate to="/login" replace />;
     return <Outlet />;
   }
 
@@ -70,6 +79,8 @@ const App = () => {
           <Route index element={<Dashboard />} />
           <Route path='colleges' element={<CollegesPage />} />
           <Route path='communities' element={<Communities />} />
+          <Route path='users' element={<Users />} />
+          <Route path='users/:userId' element={<UserDetails />} />
           <Route path='ai-model' element={<AIConfig />} />
           <Route path='bad-words' element={<BadWordsManagement />} />
         </Route>

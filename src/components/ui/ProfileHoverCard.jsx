@@ -6,6 +6,7 @@ import { Badge } from './badge';
 import { Skeleton } from './skeleton';
 import { toast } from 'sonner';
 import { authAPI } from '@/api/api';
+import { MapPin, Calendar, Users } from 'lucide-react';
 
 const genderIcons = {
   male: '♂',
@@ -31,51 +32,104 @@ export default function ProfileHoverCard({ userId, children }) {
   };
 
   const genderBadgeClass = profile?.gender === 'male'
-    ? 'bg-blue-100 text-blue-700'
+    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800'
     : profile?.gender === 'female'
-      ? 'bg-pink-100 text-pink-700'
-      : 'bg-muted text-muted-foreground';
+      ? 'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400 border-pink-200 dark:border-pink-800'
+      : 'bg-gray-50 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800';
 
   return (
     <HoverCard openDelay={200} closeDelay={100}>
       <HoverCardTrigger onMouseEnter={fetchProfile} asChild>
         {children}
       </HoverCardTrigger>
-      <HoverCardContent className="w-64 p-0 overflow-hidden">
+      <HoverCardContent className="w-80 p-0 overflow-hidden bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl">
         {loading || !profile ? (
-          <div className="flex flex-col items-center gap-2 py-4">
-            <Skeleton className="h-12 w-12 rounded-full" />
-            <Skeleton className="h-3 w-20" />
+          <div className="flex flex-col items-center gap-3 py-6">
+            <Skeleton className="h-16 w-16 rounded-full" />
+            <Skeleton className="h-4 w-24" />
             <Skeleton className="h-3 w-16" />
           </div>
         ) : (
-          <div className="bg-background flex flex-col items-center px-4 py-3">
-            <Avatar className="h-12 w-12 border-2 border-background bg-white dark:bg-background mb-2">
-              <AvatarImage src={profile.avatarUrl || profile.googleAvatarUrl} />
-              <AvatarFallback>{profile.anonymousUsername?.[0] || profile.name?.[0] || '?'}</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col items-center w-full">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="font-semibold text-base text-center">{profile.anonymousUsername || profile.name}</span>
-                {profile.gender && (
-                  <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs font-medium flex items-center gap-1 ${genderBadgeClass}`}>
-                    {genderIcons[profile.gender] || genderIcons.other}
-                    <span className="capitalize">{profile.gender}</span>
-                  </span>
+          <div className="flex flex-col">
+            {/* Header with avatar and basic info */}
+            <div className="flex items-start gap-4 p-5 pb-3">
+              <Avatar className="h-16 w-16 border-2 border-white dark:border-black shadow-sm">
+                <AvatarImage src={profile.avatarUrl || profile.googleAvatarUrl} />
+                <AvatarFallback className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-lg font-semibold">
+                  {(profile.anonymousUsername || profile.name || '?').charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-bold text-lg text-gray-900 dark:text-white truncate">
+                    {profile.anonymousUsername || profile.name}
+                  </h3>
+                  {profile.gender && (
+                    <Badge variant="outline" className={`text-xs px-2 py-0.5 ${genderBadgeClass}`}>
+                      {genderIcons[profile.gender] || genderIcons.other}
+                      <span className="ml-1 capitalize">{profile.gender}</span>
+                    </Badge>
+                  )}
+                </div>
+                
+                {profile.college && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-1">
+                    {profile.college.logoUrl && (
+                      <img 
+                        src={profile.college.logoUrl} 
+                        alt="College Logo" 
+                        className="h-4 w-4 rounded-full object-cover" 
+                      />
+                    )}
+                    <span className="truncate">{profile.college.name}</span>
+                  </div>
+                )}
+                
+                {profile.location && (
+                  <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-500">
+                    <MapPin className="h-3 w-3" />
+                    <span className="truncate">{profile.location}</span>
+                  </div>
                 )}
               </div>
-              {profile.college && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-0.5 justify-center">
-                  {profile.college.logoUrl && (
-                    <img src={profile.college.logoUrl} alt="College Logo" className="h-4 w-4 rounded-full" />
-                  )}
-                  <span>{profile.college.name}</span>
-                </div>
-              )}
             </div>
+
+            {/* Bio section */}
             {profile.bio && (
-              <div className="pt-1 text-xs text-muted-foreground text-center w-full line-clamp-2">{profile.bio}</div>
+              <div className="px-5 pb-3">
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {profile.bio}
+                </p>
+              </div>
             )}
+
+            {/* Stats section */}
+            {profile.stats && (
+              <div className="flex items-center gap-6 px-5 py-3 border-t border-gray-100 dark:border-gray-800">
+                <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+                  <Users className="h-4 w-4" />
+                  <span className="font-medium">{profile.stats.posts || 0}</span>
+                  <span>posts</span>
+                </div>
+                <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+                  <Users className="h-4 w-4" />
+                  <span className="font-medium">{profile.stats.followers || 0}</span>
+                  <span>followers</span>
+                </div>
+                <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+                  <Users className="h-4 w-4" />
+                  <span className="font-medium">{profile.stats.following || 0}</span>
+                  <span>following</span>
+                </div>
+              </div>
+            )}
+
+            {/* Join date */}
+            <div className="flex items-center gap-1 px-5 pb-4 text-xs text-gray-500 dark:text-gray-500">
+              <Calendar className="h-3 w-3" />
+              <span>Joined {profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'recently'}</span>
+            </div>
           </div>
         )}
       </HoverCardContent>

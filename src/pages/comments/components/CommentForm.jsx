@@ -17,6 +17,7 @@ const CommentForm = ({ postId, onCommentCreated, removeCommentFromState, placeho
 
     const handleSubmit = async () => {
         if (!content.trim() && media.length === 0) return;
+        
         setIsSubmitting(true);
         const tempId = 'temp-' + Date.now();
         const optimisticComment = {

@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import api from '@/api/api';
 import VerifiedBadge from './verified-badge';
 import NSFWBadge from './nsfw-badge';
+import { Users, Calendar, Hash, MapPin } from 'lucide-react';
 
 export default function CommunityHoverCard({ communityId, children }) {
   const [community, setCommunity] = useState(null);
@@ -51,44 +52,96 @@ export default function CommunityHoverCard({ communityId, children }) {
       <HoverCardTrigger onMouseEnter={fetchCommunity} asChild>
         {children}
       </HoverCardTrigger>
-      <HoverCardContent className="w-72 p-0 overflow-hidden">
+      <HoverCardContent className="w-80 p-0 overflow-hidden bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl">
         {loading || !community ? (
-          <div className="flex flex-col items-center gap-2 py-4">
-            <Skeleton className="h-14 w-14 rounded-full" />
-            <Skeleton className="h-3 w-24" />
+          <div className="flex flex-col items-center gap-3 py-6">
+            <Skeleton className="h-16 w-16 rounded-full" />
+            <Skeleton className="h-4 w-24" />
             <Skeleton className="h-3 w-16" />
           </div>
         ) : (
-          <div className="bg-background flex flex-col items-center px-4 py-3">
+          <div className="flex flex-col">
+            {/* Banner */}
             {community.bannerUrl && (
-              <div className="h-16 w-full bg-muted relative mb-[-32px] rounded-t-md overflow-hidden">
-                <img src={community.bannerUrl} alt="Banner" className="object-cover w-full h-full" />
+              <div className="h-20 w-full relative overflow-hidden">
+                <img 
+                  src={community.bannerUrl} 
+                  alt="Banner" 
+                  className="object-cover w-full h-full" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
               </div>
             )}
-            <Avatar className="h-14 w-14 border-2 border-background bg-white dark:bg-background mb-2 mt-2 z-10">
-              <AvatarImage src={community.logoUrl} />
-              <AvatarFallback>{community.name?.[0]?.toUpperCase() || 'C'}</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col items-center w-full mt-1">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="font-semibold text-base text-center">c/{community.name}</span>
-                {community.isVerified && <VerifiedBadge size="small" />}
-                {community.isNsfw && <NSFWBadge />}
-              </div>
-              <div className="text-muted-foreground text-xs mb-0.5 line-clamp-2 text-center w-full">{community.description}</div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-0.5 justify-center">
-                <span>{community.memberCount || 0} members</span>
+
+            {/* Header with logo and basic info */}
+            <div className="flex items-start gap-4 p-5 pb-3">
+              <Avatar className={`h-16 w-16 border-2 border-white dark:border-black shadow-sm ${community.bannerUrl ? '-mt-8' : ''}`}>
+                <AvatarImage src={community.logoUrl} />
+                <AvatarFallback className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-lg font-semibold">
+                  {community.name?.charAt(0).toUpperCase() || 'C'}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-bold text-lg text-gray-900 dark:text-white">
+                    c/{community.name}
+                  </h3>
+                  {community.isVerified && <VerifiedBadge size="small" />}
+                  {community.isNsfw && <NSFWBadge />}
+                </div>
+                
+                {community.description && (
+                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-2">
+                    {community.description}
+                  </p>
+                )}
+
+                {/* Stats row */}
+                <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center gap-1">
+                    <Users className="h-4 w-4" />
+                    <span className="font-medium">{community.memberCount || 0}</span>
+                    <span>members</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Hash className="h-4 w-4" />
+                    <span className="font-medium">{community.postCount || 0}</span>
+                    <span>posts</span>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="pt-2 flex justify-center w-full">
+
+            {/* Community details */}
+            <div className="px-5 pb-3 space-y-2">
+              {community.location && (
+                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-500">
+                  <MapPin className="h-3 w-3" />
+                  <span>{community.location}</span>
+                </div>
+              )}
+              
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-500">
+                <Calendar className="h-3 w-3" />
+                <span>Created {community.createdAt ? new Date(community.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'recently'}</span>
+              </div>
+            </div>
+
+            {/* Join/Leave button */}
+            <div className="px-5 pb-4">
               <Button
                 size="sm"
                 variant={community.isFollowing ? 'outline' : 'default'}
                 onClick={handleJoinLeave}
                 disabled={joining}
-                className="rounded-full px-5"
+                className={`w-full rounded-full font-medium ${
+                  community.isFollowing 
+                    ? 'border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900' 
+                    : 'bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200'
+                }`}
               >
-                {joining ? '...' : community.isFollowing ? 'Joined' : 'Join'}
+                {joining ? '...' : community.isFollowing ? 'Joined' : 'Join Community'}
               </Button>
             </div>
           </div>

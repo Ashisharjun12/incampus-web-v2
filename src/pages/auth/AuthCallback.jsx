@@ -15,18 +15,45 @@ const AuthCallback = () => {
 
     if (token) {
       handleAuthCallback(token)
-        .then(() => {
-          toast.success('Successfully logged in!', {
-            style: {
-              background: '#22c55e',
-              color: 'white',
-              border: '1px solid #16a34a'
+        .then((user) => {
+          // Check if user is suspended or deleted
+          const isSuspended = user?.profile?.status === 'suspended' || user?.profile?.status === 'deleted';
+          
+          if (isSuspended) {
+            // For suspended users, show a different message and navigate to home
+            // They will see the SuspendedUser component
+            if (user?.profile?.status === 'suspended') {
+              toast.error('Your account has been suspended. Please contact ashishrahul748@gmail.com for support.', {
+                style: {
+                  background: '#ef4444',
+                  color: 'white',
+                  border: '1px solid #dc2626'
+                }
+              });
+            } else if (user?.profile?.status === 'deleted') {
+              toast.error('Your account has been deleted. Please contact ashishrahul748@gmail.com for support.', {
+                style: {
+                  background: '#ef4444',
+                  color: 'white',
+                  border: '1px solid #dc2626'
+                }
+              });
             }
-          });
-          if (onboarding) {
-            navigate('/onboarding', { replace: true });
-          } else {
             navigate('/', { replace: true });
+          } else {
+            // Normal login success
+            toast.success('Successfully logged in!', {
+              style: {
+                background: '#22c55e',
+                color: 'white',
+                border: '1px solid #16a34a'
+              }
+            });
+            if (onboarding) {
+              navigate('/onboarding', { replace: true });
+            } else {
+              navigate('/', { replace: true });
+            }
           }
         })
         .catch((error) => {

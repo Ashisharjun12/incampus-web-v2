@@ -58,19 +58,7 @@ const Step1Details = ({ formData, setFormData }) => {
                             onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isNsfw: checked }))}
                         />
                     </div>
-                    <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
-                        <div className="space-y-0.5">
-                            <Label htmlFor="isPrivate">Private community</Label>
-                             <p className="text-[0.8rem] text-muted-foreground">
-                                Only approved users can view and submit.
-                            </p>
-                        </div>
-                        <Switch
-                            id="isPrivate"
-                            checked={formData.isPrivate}
-                            onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isPrivate: checked }))}
-                        />
-                    </div>
+                   
                     {isAdmin && (
                         <>
                             <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm border-blue-200 bg-blue-50">

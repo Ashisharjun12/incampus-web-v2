@@ -5,6 +5,7 @@ import MobileNav from '../home/MobileNav'
 import Navigation from '../home/Navigation'
 import CreatePostModal from '../posts/components/CreatePostModal'
 import RightSidebar from '../home/RightSidebar'
+import SuspensionGuard from '@/components/SuspensionGuard'
 
 const Layout = () => {
   const [showCreatePost, setShowCreatePost] = useState(false);
@@ -36,7 +37,9 @@ const Layout = () => {
         </aside>
       </div>
       {/* Create Post Modal (global, for topbar create button) */}
-      <CreatePostModal open={showCreatePost} onOpenChange={setShowCreatePost} onPostCreated={handlePostCreated} />
+      <SuspensionGuard action="create posts">
+        <CreatePostModal open={showCreatePost} onOpenChange={setShowCreatePost} onPostCreated={handlePostCreated} />
+      </SuspensionGuard>
       {/* Mobile Bottom Nav */}
       <MobileNav />
     </div>

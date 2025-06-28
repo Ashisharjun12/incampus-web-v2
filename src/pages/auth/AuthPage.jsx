@@ -47,24 +47,24 @@ function OrbitingDicebearAvatars() {
 
 const AuthPage = () => {
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-white dark:bg-black">
       {/* Modern left login card */}
-      <div className="flex flex-col items-center justify-center p-8 bg-background">
-        <div className="w-full max-w-md mx-auto rounded-3xl shadow-2xl bg-white/70 dark:bg-background/80 backdrop-blur-md px-8 py-10 flex flex-col items-center gap-6">
+      <div className="flex flex-col items-center justify-center p-8">
+        <div className="w-full max-w-md mx-auto rounded-2xl shadow-xl bg-white dark:bg-neutral-900 border border-gray-200 dark:border-gray-800 px-8 py-12 flex flex-col items-center gap-8">
           {/* AvatarCircles at the top */}
           <AvatarCircles avatarUrls={dicebearAvatarsArr} numPeople={99} />
           {/* Headline and subtext */}
           <div className="text-center">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">Join Your Campus Community, Anonymously</h1>
-            <p className="text-muted-foreground text-base">Connect, share, and discover what's happening at your college.</p>
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2 text-gray-900 dark:text-white">Welcome to InCampus</h1>
+            <p className="text-muted-foreground text-base font-medium">Join your campus community. Connect, share, and discover what's happening at your college.</p>
           </div>
           {/* Google login button */}
           <Button 
             size="lg" 
-            className="w-full text-base font-semibold shadow-md"
+            className="w-full text-base font-semibold rounded-full py-4 bg-black dark:bg-white text-white dark:text-black hover:bg-neutral-900 dark:hover:bg-neutral-200 border-none shadow-none transition"
             onClick={() => authAPI.loginWithGoogle()}
           >
-            <FcGoogle className="mr-2 h-5 w-5" />
+            <FcGoogle className="mr-2 h-6 w-6" />
             Continue with Google
           </Button>
           {/* Terms & Privacy */}
@@ -76,7 +76,7 @@ const AuthPage = () => {
         </div>
       </div>
       {/* Right: Orbiting avatars */}
-      <div className="hidden lg:block relative">
+      <div className="hidden lg:block relative bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-black dark:via-neutral-900 dark:to-neutral-950">
         <OrbitingDicebearAvatars />
       </div>
     </div>

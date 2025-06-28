@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, memo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
@@ -27,9 +27,15 @@ const AdminSidebar = ({ setSidebarOpen }) => {
     { name: 'Bad Words', href: '/admin/bad-words', icon: Shield }
   ];
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
-  };
+  }, [logout]);
+
+  const handleNavClick = useCallback(() => {
+    if (setSidebarOpen) {
+      setSidebarOpen(false);
+    }
+  }, [setSidebarOpen]);
 
   return (
     <div className="flex h-full flex-col">
@@ -54,7 +60,7 @@ const AdminSidebar = ({ setSidebarOpen }) => {
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent'
               }`}
-              onClick={() => setSidebarOpen && setSidebarOpen(false)}
+              onClick={handleNavClick}
             >
               <item.icon className="mr-3 h-4 w-4" />
               {item.name}
@@ -78,4 +84,4 @@ const AdminSidebar = ({ setSidebarOpen }) => {
   );
 };
 
-export default AdminSidebar; 
+export default memo(AdminSidebar); 

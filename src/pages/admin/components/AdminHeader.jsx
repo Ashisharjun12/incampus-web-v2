@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
 import { useAuthStore } from '@/store/authstore';
@@ -8,13 +8,19 @@ const AdminHeader = ({ setSidebarOpen }) => {
     const { authUser } = useAuthStore();
     const userInitial = authUser?.name?.charAt(0).toUpperCase() || '?';
 
+    const handleSidebarToggle = useCallback(() => {
+        if (setSidebarOpen) {
+            setSidebarOpen(true);
+        }
+    }, [setSidebarOpen]);
+
     return (
         <div className="sticky top-0 z-30 flex h-16 items-center gap-x-4 border-b border-border bg-background px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
             <Button
                 variant="ghost"
                 size="icon"
                 className="lg:hidden"
-                onClick={() => setSidebarOpen(true)}
+                onClick={handleSidebarToggle}
             >
                 <Menu className="h-4 w-4" />
             </Button>
@@ -30,4 +36,4 @@ const AdminHeader = ({ setSidebarOpen }) => {
     )
 }
 
-export default AdminHeader; 
+export default memo(AdminHeader); 

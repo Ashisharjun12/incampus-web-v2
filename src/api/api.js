@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useAuthStore } from "@/store/authstore";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
 
@@ -15,6 +16,40 @@ api.interceptors.request.use(config => {
   return config;
 });
 
+// Axios response interceptor to handle suspension/deletion
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 403 && error.response?.data?.status) {
+      // User is suspended or deleted
+      const { status, reason } = error.response.data;
+      
+      // Update the auth store to reflect suspension status
+      const authStore = useAuthStore.getState();
+      if (authStore.authUser) {
+        const updatedUser = {
+          ...authStore.authUser,
+          profile: {
+            ...authStore.authUser.profile,
+            status: status
+          }
+        };
+        
+        // Only update if status actually changed
+        if (authStore.authUser.profile?.status !== status) {
+          authStore.setAuthUser(updatedUser);
+        }
+      }
+      
+      // Don't show console error for suspension - it's expected
+      if (status !== 'suspended' && status !== 'deleted') {
+        console.error('Account status changed:', reason);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 // --- Auth Service ---
 export const authAPI = {
   loginWithGoogle: () => {
@@ -28,6 +63,10 @@ export const authAPI = {
 
   getProfile: () => {
     return api.get('/profile/me');
+  },
+
+  getProfileStatus: () => {
+    return api.get('/profile/me/status');
   },
   
   getProfileById: (userId) => api.get(`/profile/${userId}`),
@@ -375,6 +414,67 @@ export const searchAPI = {
     const queryParams = new URLSearchParams(params).toString();
     return api.get(`/search/posts?${queryParams}`);
   },
+};
+
+// --- Admin Service ---
+export const adminAPI = {
+  // Get all users with optional filters
+  getAllUsers: (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return api.get(`/admin/users?${queryParams}`);
+  },
+
+  // Get user by ID with detailed information
+  getUserById: (userId) => api.get(`/admin/users/${userId}`),
+
+  // Get user posts
+  getUserPosts: (userId, params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return api.get(`/admin/users/${userId}/posts?${queryParams}`);
+  },
+
+  // Get user comments
+  getUserComments: (userId, params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return api.get(`/admin/users/${userId}/comments?${queryParams}`);
+  },
+
+  // Get user communities
+  getUserCommunities: (userId, params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return api.get(`/admin/users/${userId}/communities?${queryParams}`);
+  },
+
+  // User account management
+  suspendUser: (userId, data = {}) => api.post(`/admin/users/${userId}/suspend`, data),
+  unsuspendUser: (userId) => api.post(`/admin/users/${userId}/unsuspend`),
+  deleteUser: (userId, data = {}) => api.delete(`/admin/users/${userId}`, { data }),
+  restoreUser: (userId) => api.post(`/admin/users/${userId}/restore`),
+
+  // Get dashboard stats
+  getDashboardStats: () => api.get('/admin/dashboard/stats'),
+
+  // AI Configuration
+  getAIConfig: () => api.get('/admin/ai/config'),
+  updateAIConfig: (config) => api.put('/admin/ai/config', config),
+  testAI: () => api.post('/admin/ai/test'),
+  testModeration: (content, isNsfwEnabled) => api.post('/admin/ai/moderate', { content, isNsfwEnabled }),
+
+  // College management
+  getAllColleges: () => api.get('/admin/colleges'),
+  createCollege: (collegeData) => api.post('/admin/colleges', collegeData),
+  updateCollege: (id, collegeData) => api.put(`/admin/colleges/${id}`, collegeData),
+  deleteCollege: (id) => api.delete(`/admin/colleges/${id}`),
+
+  // Bad words management
+  getBadWords: () => api.get('/admin/bad-words'),
+  addBadWords: (badWordsData) => api.post('/admin/bad-words', badWordsData),
+  uploadBadWordsCSV: (formData) => api.post('/admin/bad-words/upload-csv', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  updateBadWords: (id, updateData) => api.put(`/admin/bad-words/${id}`, updateData),
+  deleteBadWords: (id) => api.delete(`/admin/bad-words/${id}`),
+  testBadWords: (content) => api.post('/admin/bad-words/test', { content }),
 };
 
 export default api;

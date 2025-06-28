@@ -5,13 +5,34 @@ import { authAPI } from "@/api/api";
 
 export const useAuthStore = create(
   persist(
-    (set) => ({
+    (set, get) => ({
       authUser: null,
-      isLoading: true,
+      isLoading: false,
+      isSuspended: false,
 
       // Action to set user data after successful authentication
       setAuthUser: (user) => {
-        set({ authUser: user, isLoading: false });
+        const currentState = get();
+        const isSuspended = user?.profile?.status === 'suspended' || user?.profile?.status === 'deleted';
+        
+        // Only update if there's an actual change
+        if (currentState.authUser?.id !== user?.id || 
+            currentState.isSuspended !== isSuspended) {
+          
+          set({ 
+            authUser: user,
+            isSuspended
+          });
+          
+          // Show notification only if status changed to suspended
+          if (isSuspended && user?.profile?.status === 'suspended' && 
+              currentState.authUser?.profile?.status !== 'suspended') {
+            toast.error('Your account has been suspended by an administrator.');
+          } else if (isSuspended && user?.profile?.status === 'deleted' && 
+                     currentState.authUser?.profile?.status !== 'deleted') {
+            toast.error('Your account has been deleted by an administrator.');
+          }
+        }
       },
 
       // Action to update user data
@@ -22,20 +43,30 @@ export const useAuthStore = create(
       // Action to handle the OAuth callback
       handleAuthCallback: async (token) => {
         try {
+          // Store the token
           localStorage.setItem('token', token);
-          const response = await authAPI.getProfile();
-          set({ authUser: response.data.data, isLoading: false });
-          return response.data.data;
+          
+          // Get user profile using the status endpoint (allows suspended users)
+          const response = await authAPI.getProfileStatus();
+          if (response.data.success) {
+            const user = response.data.data;
+            const isSuspended = user?.profile?.status === 'suspended' || user?.profile?.status === 'deleted';
+            
+            set({ 
+              authUser: user,
+              isLoading: false,
+              isSuspended
+            });
+            
+            // Allow suspended users to log in - they will see SuspendedUser component
+            // Don't throw error or remove token for suspended users
+            return user;
+          } else {
+            throw new Error('Failed to get user profile');
+          }
         } catch (error) {
           localStorage.removeItem('token');
-          set({ authUser: null, isLoading: false });
-          toast.error(error.response?.data?.message || "Authentication failed", {
-            style: {
-              background: '#ef4444',
-              color: 'white',
-              border: '1px solid #dc2626'
-            }
-          });
+          set({ authUser: null, isLoading: false, isSuspended: false });
           throw error;
         }
       },
@@ -44,42 +75,88 @@ export const useAuthStore = create(
       logout: async () => {
         try {
           await authAPI.logout();
-          localStorage.removeItem('token');
-          set({ authUser: null });
-          toast.success("Logout successful", {
-            style: {
-              background: '#22c55e',
-              color: 'white',
-              border: '1px solid #16a34a'
-            }
-          });
         } catch (error) {
-          toast.error("Logout failed", {
-            style: {
-              background: '#ef4444',
-              color: 'white',
-              border: '1px solid #dc2626'
-            }
-          });
-          throw error;
+          console.error('Logout error:', error);
         }
+        localStorage.removeItem('token');
+        set({ authUser: null, isLoading: false, isSuspended: false });
+        toast.success("Logout successful", {
+          style: {
+            background: '#10b981',
+            color: 'white',
+          },
+        });
       },
       
       // Action to check authentication status on initial load
       checkAuth: async () => {
+        set({ isLoading: true });
+        try {
           const token = localStorage.getItem('token');
           if (!token) {
-              set({ authUser: null, isLoading: false });
-              return;
+            set({ authUser: null, isLoading: false, isSuspended: false });
+            return;
           }
-          try {
-              const response = await authAPI.getProfile();
-              set({ authUser: response.data.data, isLoading: false });
-          } catch (error) {
-              localStorage.removeItem('token');
-              set({ authUser: null, isLoading: false });
+
+          const response = await authAPI.getProfileStatus();
+          if (response.data.success) {
+            const user = response.data.data;
+            const isSuspended = user?.profile?.status === 'suspended' || user?.profile?.status === 'deleted';
+            
+            set({ 
+              authUser: user,
+              isLoading: false,
+              isSuspended
+            });
+            
+            // Show notification if user is suspended
+            if (isSuspended && user?.profile?.status === 'suspended') {
+              toast.error('Your account has been suspended by an administrator.');
+            } else if (isSuspended && user?.profile?.status === 'deleted') {
+              toast.error('Your account has been deleted by an administrator.');
+            }
+          } else {
+            set({ authUser: null, isLoading: false, isSuspended: false });
+            localStorage.removeItem('token');
           }
-      }
+        } catch (error) {
+          console.error('Auth check failed:', error);
+          set({ authUser: null, isLoading: false, isSuspended: false });
+          localStorage.removeItem('token');
+        }
+      },
+
+      setSuspended: (suspended) => {
+        const currentState = get();
+        if (currentState.isSuspended !== suspended) {
+          set({ isSuspended: suspended });
+        }
+      },
+
+      loginWithGoogle: () => {
+        authAPI.loginWithGoogle();
+      },
+
+      // Method to refresh user data (useful when status might have changed)
+      refreshUserData: async () => {
+        try {
+          const response = await authAPI.getProfileStatus();
+          if (response.data.success) {
+            const user = response.data.data;
+            const isSuspended = user?.profile?.status === 'suspended' || user?.profile?.status === 'deleted';
+            
+            set({ 
+              authUser: user,
+              isSuspended
+            });
+            
+            return { user, isSuspended };
+          }
+        } catch (error) {
+          console.error('Failed to refresh user data:', error);
+        }
+        return null;
+      },
     }),
     {
       name: "auth-storage", // unique name for local storage
@@ -107,7 +184,10 @@ export const useAuthStore = create(
         },
         removeItem: (name) => localStorage.removeItem(name),
       },
-      partialize: (state) => ({ authUser: state.authUser }),
+      partialize: (state) => ({ 
+        authUser: state.authUser, 
+        isSuspended: state.isSuspended
+      }),
     }
   )
 );

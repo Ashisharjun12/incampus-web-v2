@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { communityAPI, uploadAPI } from '@/api/api';
 import { toast } from 'sonner';
@@ -7,6 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/store/authstore';
+import { X, Check, ArrowLeft, ArrowRight } from 'lucide-react';
 
 // Import steps
 import Step1Details from './CreateCommunity/Step1Details';
@@ -54,11 +55,9 @@ const CreateCommunityForm = ({ open, onOpenChange, onCommunitySaved, community =
                     isVerified: community.isVerified || false,
                     isAdminCreated: community.isAdminCreated || false
                 });
-                // In edit mode, we want to use steps.
                 setStep(1); 
                 setCreatedCommunity(community); 
             } else {
-                 // Revoke previous blob URLs before resetting
                 if (formData.logoUrl && formData.logoUrl.startsWith('blob:')) URL.revokeObjectURL(formData.logoUrl);
                 if (formData.bannerUrl && formData.bannerUrl.startsWith('blob:')) URL.revokeObjectURL(formData.bannerUrl);
                 setFormData(initialFormData);
@@ -67,7 +66,6 @@ const CreateCommunityForm = ({ open, onOpenChange, onCommunitySaved, community =
             }
         }
     }, [open, isEditMode, community, initialFormData]);
-
 
     const handleFileChange = (file, type) => {
         let urlKey, fileKey;
@@ -97,7 +95,6 @@ const CreateCommunityForm = ({ open, onOpenChange, onCommunitySaved, community =
     const handleSubmit = async () => {
         setIsSubmitting(true);
         try {
-            // 1. Upload files if they exist
             let finalLogoUrl = formData.logoUrl;
             let finalBannerUrl = formData.bannerUrl;
 
@@ -110,7 +107,6 @@ const CreateCommunityForm = ({ open, onOpenChange, onCommunitySaved, community =
                 finalBannerUrl = uploadResponse.data.data.url;
             }
 
-            // 2. Prepare data
             const communityData = {
                 name: formData.name,
                 description: formData.description,
@@ -125,7 +121,6 @@ const CreateCommunityForm = ({ open, onOpenChange, onCommunitySaved, community =
                 communityData.isAdminCreated = formData.isAdminCreated;
             }
 
-            // 3. Create or Update community
             let response;
             if (isEditMode) {
                 response = await communityAPI.update(community.id, communityData);
@@ -133,13 +128,11 @@ const CreateCommunityForm = ({ open, onOpenChange, onCommunitySaved, community =
                 if (onCommunitySaved) onCommunitySaved();
                 onOpenChange(false);
             } else {
-                // In create mode, we use steps
-                // This function is now only for step 2 of creation
                 response = await communityAPI.create(communityData);
                 if (response.data.success && response.data.data) {
                     toast.success('Community created! Now, add some topics.');
                     setCreatedCommunity(response.data.data);
-                    setStep(3); // Move to topics step
+                    setStep(3);
                 } else {
                      toast.error(response.data.message || 'Failed to create community');
                 }
@@ -174,6 +167,11 @@ const CreateCommunityForm = ({ open, onOpenChange, onCommunitySaved, community =
         }
     };
 
+    const handleClose = () => {
+        if (formData.logoUrl && formData.logoUrl.startsWith('blob:')) URL.revokeObjectURL(formData.logoUrl);
+        if (formData.bannerUrl && formData.bannerUrl.startsWith('blob:')) URL.revokeObjectURL(formData.bannerUrl);
+        onOpenChange(false);
+    };
 
     const renderCreateMode = () => {
          const steps = [
@@ -184,7 +182,9 @@ const CreateCommunityForm = ({ open, onOpenChange, onCommunitySaved, community =
         return (
             <>
                 <DialogHeader className="mb-6">
-                    <DialogTitle>Create a community</DialogTitle>
+                    <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">
+                        {isEditMode ? `Edit c/${community.name}` : 'Create a community'}
+                    </DialogTitle>
                 </DialogHeader>
                 <div className="flex-grow">
                     <AnimatePresence mode="wait">
@@ -203,18 +203,52 @@ const CreateCommunityForm = ({ open, onOpenChange, onCommunitySaved, community =
                     <div className="w-full flex justify-between items-center">
                         <div className="flex gap-1">
                           {[1, 2, 3].map(s => (
-                            <div key={s} className={`h-2 w-2 rounded-full ${step === s ? 'bg-primary' : 'bg-muted'}`} />
+                            <div key={s} className={`h-2 w-2 rounded-full transition-colors ${
+                                step === s ? 'bg-black dark:bg-white' : 'bg-gray-300 dark:bg-gray-700'
+                            }`} />
                           ))}
                         </div>
                         <div className="flex gap-2">
-                          {step > 1 && <Button variant="ghost" onClick={() => setStep(step - 1)} disabled={isSubmitting}>Back</Button>}
-                          {step === 1 && <Button onClick={() => setStep(2)}>Next</Button>}
-                          {step === 2 && <Button onClick={handleSubmit} disabled={isSubmitting || !formData.name || !formData.description}>
-                              {isSubmitting ? 'Creating...' : 'Create & Next'}
-                          </Button>}
-                          {step === 3 && <Button onClick={handleFinishCreation} disabled={isSubmitting}>
-                              {isSubmitting ? 'Saving...' : 'Finish'}
-                          </Button>}
+                          {step > 1 && (
+                            <Button 
+                                variant="outline" 
+                                onClick={() => setStep(step - 1)} 
+                                disabled={isSubmitting}
+                                className="border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900"
+                            >
+                                <ArrowLeft className="h-4 w-4 mr-2" />
+                                Back
+                            </Button>
+                          )}
+                          {step === 1 && (
+                            <Button 
+                                onClick={() => setStep(2)}
+                                className="bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200"
+                            >
+                                Next
+                                <ArrowRight className="h-4 w-4 ml-2" />
+                            </Button>
+                          )}
+                          {step === 2 && (
+                            <Button 
+                                onClick={handleSubmit} 
+                                disabled={isSubmitting || !formData.name || !formData.description}
+                                className="bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50"
+                            >
+                                {isSubmitting ? 'Creating...' : 'Create & Next'}
+                                <ArrowRight className="h-4 w-4 ml-2" />
+                            </Button>
+                          )}
+                          {step === 3 && (
+                            <Button 
+                                onClick={handleFinishCreation} 
+                                disabled={isSubmitting}
+                                className="bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50"
+                            >
+                                {isSubmitting ? 'Saving...' : 'Finish'}
+                                <Check className="h-4 w-4 ml-2" />
+                            </Button>
+                          )}
                         </div>
                     </div>
                 </DialogFooter>
@@ -232,7 +266,9 @@ const CreateCommunityForm = ({ open, onOpenChange, onCommunitySaved, community =
         return (
             <>
                 <DialogHeader className="mb-6">
-                    <DialogTitle>Edit c/{community.name}</DialogTitle>
+                    <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">
+                        Edit c/{community.name}
+                    </DialogTitle>
                 </DialogHeader>
                 <div className="flex-grow">
                     <AnimatePresence mode="wait">
@@ -251,15 +287,42 @@ const CreateCommunityForm = ({ open, onOpenChange, onCommunitySaved, community =
                     <div className="w-full flex justify-between items-center">
                         <div className="flex gap-1">
                           {[1, 2, 3].map(s => (
-                            <div key={s} className={`h-2 w-2 rounded-full ${step === s ? 'bg-primary' : 'bg-muted'}`} />
+                            <div key={s} className={`h-2 w-2 rounded-full transition-colors ${
+                                step === s ? 'bg-black dark:bg-white' : 'bg-gray-300 dark:bg-gray-700'
+                            }`} />
                           ))}
                         </div>
                         <div className="flex gap-2">
-                          {step > 1 && <Button variant="ghost" onClick={() => setStep(step - 1)} disabled={isSubmitting}>Back</Button>}
-                          {step < 3 && <Button onClick={() => setStep(step + 1)}>Next</Button>}
-                          {step === 3 && <Button onClick={handleSubmit} disabled={isSubmitting || !formData.name || !formData.description}>
-                              {isSubmitting ? 'Saving...' : 'Save Changes'}
-                          </Button>}
+                          {step > 1 && (
+                            <Button 
+                                variant="outline" 
+                                onClick={() => setStep(step - 1)} 
+                                disabled={isSubmitting}
+                                className="border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900"
+                            >
+                                <ArrowLeft className="h-4 w-4 mr-2" />
+                                Back
+                            </Button>
+                          )}
+                          {step < 3 && (
+                            <Button 
+                                onClick={() => setStep(step + 1)}
+                                className="bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200"
+                            >
+                                Next
+                                <ArrowRight className="h-4 w-4 ml-2" />
+                            </Button>
+                          )}
+                          {step === 3 && (
+                            <Button 
+                                onClick={handleSubmit} 
+                                disabled={isSubmitting || !formData.name || !formData.description}
+                                className="bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50"
+                            >
+                                {isSubmitting ? 'Saving...' : 'Save Changes'}
+                                <Check className="h-4 w-4 ml-2" />
+                            </Button>
+                          )}
                         </div>
                     </div>
                 </DialogFooter>
@@ -269,39 +332,67 @@ const CreateCommunityForm = ({ open, onOpenChange, onCommunitySaved, community =
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[800px] w-full p-0">
-                <div className="grid grid-cols-1 md:grid-cols-2">
+            <DialogContent className="sm:max-w-[900px] w-full p-0 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl">
+                <div className="grid grid-cols-1 lg:grid-cols-2">
                     <div className="p-6 flex flex-col">
                         {isEditMode ? renderEditMode() : renderCreateMode()}
                     </div>
 
-                    <div className="hidden md:flex flex-col items-center justify-center bg-muted/50 p-8">
+                    <div className="hidden lg:flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900/50 p-8 border-l border-gray-200 dark:border-gray-800">
                         {/* Live Preview Pane */}
-                         <div className="w-full max-w-xs bg-background dark:bg-neutral-800/50 rounded-lg shadow-md overflow-hidden">
-                           <div className="h-20 bg-muted" style={{ backgroundImage: `url(${formData.bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                         <div className="w-full max-w-xs bg-white dark:bg-black rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-800">
+                           <div className="h-24 bg-gray-200 dark:bg-gray-800 relative" style={{ 
+                               backgroundImage: formData.bannerUrl ? `url(${formData.bannerUrl})` : 'none', 
+                               backgroundSize: 'cover', 
+                               backgroundPosition: 'center' 
+                           }}>
+                               {!formData.bannerUrl && (
+                                   <div className="absolute inset-0 flex items-center justify-center text-gray-400 dark:text-gray-600">
+                                       <span className="text-sm">Banner preview</span>
+                                   </div>
+                               )}
+                           </div>
                            <div className="p-4">
                                <div className="flex items-center gap-3 -mt-8">
-                                   <Avatar className="h-14 w-14 border-4 border-background dark:border-neutral-800/50">
+                                   <Avatar className="h-16 w-16 border-4 border-white dark:border-black shadow-sm">
                                        <AvatarImage src={formData.logoUrl} />
-                                       <AvatarFallback>{formData.name?.charAt(0).toUpperCase() || 'C'}</AvatarFallback>
+                                       <AvatarFallback className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-lg font-semibold">
+                                           {formData.name?.charAt(0).toUpperCase() || 'C'}
+                                       </AvatarFallback>
                                    </Avatar>
                                </div>
-                                <div className="mt-2">
-                                     <div className="flex items-center gap-2">
-                                         {formData.isNsfw && <Badge variant="destructive" className="font-bold">NSFW</Badge>}
-                                         <h3 className="font-bold text-md truncate">c/{formData.name || 'CommunityName'}</h3>
+                                <div className="mt-3">
+                                     <div className="flex items-center gap-2 mb-1">
+                                         {formData.isNsfw && <Badge variant="destructive" className="text-xs bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">NSFW</Badge>}
+                                         <h3 className="font-bold text-lg text-gray-900 dark:text-white truncate">
+                                             c/{formData.name || 'CommunityName'}
+                                         </h3>
                                      </div>
-                                     <p className="text-sm text-muted-foreground mt-2 truncate">
+                                     <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                                          {formData.description || 'Community description will appear here.'}
                                      </p>
                                 </div>
-                                <div className="text-xs text-muted-foreground mt-3">
-                                   {community?.memberCount || 1} member{community?.memberCount !== 1 && 's'} • 1 online
+                                <div className="flex items-center gap-4 mt-4 text-xs text-gray-500 dark:text-gray-500">
+                                   <span>{community?.memberCount || 1} member{community?.memberCount !== 1 && 's'}</span>
+                                   <span>•</span>
+                                   <span>1 online</span>
                                </div>
                            </div>
                         </div>
                     </div>
                 </div>
+                
+                {/* Close button */}
+                <DialogClose asChild>
+                    <Button 
+                        type="button" 
+                        variant="ghost" 
+                        onClick={handleClose} 
+                        className="absolute top-4 right-4 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full p-2"
+                    >
+                      
+                    </Button>
+                </DialogClose>
             </DialogContent>
         </Dialog>
     );

@@ -13,6 +13,7 @@ import { useLikeStore } from '@/store/likestore';
 import CommentItem from './CommentItem';
 import CommentForm from './CommentForm';
 import { toast } from 'sonner';
+import SuspensionGuard from '@/components/SuspensionGuard';
 
 // Helper: build a tree from flat comments array
 function buildCommentTree(comments) {
@@ -153,32 +154,31 @@ const CommentsDrawer = ({ postId, open, onOpenChange, commentCount = 0 }) => {
 
     return (
         <Drawer open={open} onOpenChange={onOpenChange}>
-            <DrawerContent className="h-[85vh] max-h-[85vh] overflow-hidden">
-                <DrawerHeader className="border-b border-border/50 pb-4">
+            <DrawerContent className="h-[90vh] max-h-[90vh] overflow-hidden bg-white dark:bg-black border border-gray-100 dark:border-gray-800 rounded-2xl">
+                <DrawerHeader className="border-b border-gray-100 dark:border-gray-800 pb-4 bg-white dark:bg-black">
                     <div className="flex items-center justify-between">
-                        <DrawerTitle className="flex items-center gap-2">
-                            <MessageCircle className="h-5 w-5" />
-                            Comments ({commentCountDisplay})
+                        <DrawerTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900 dark:text-white">
+                            <MessageCircle className="h-5 w-5 text-gray-500" />
+                            Comments
                         </DrawerTitle>
                         <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => onOpenChange(false)}
-                            className="h-8 w-8 p-0"
+                            className="h-10 w-10 p-0 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl"
                         >
-                            <X className="h-4 w-4" />
+                            <X className="h-5 w-5" />
                         </Button>
                     </div>
                 </DrawerHeader>
-                
                 <div className="flex flex-col h-full min-h-0">
                     {/* Comments List */}
                     <div className="flex-1 min-h-0 overflow-y-auto py-4 px-4">
                         {isLoading ? (
                             <div className="space-y-4">
                                 {[...Array(5)].map((_, i) => (
-                                    <div key={i} className="flex items-start gap-3">
-                                        <Skeleton className="h-8 w-8 rounded-full" />
+                                    <div key={i} className="flex items-start gap-3 py-3 border-b border-gray-100 dark:border-gray-800">
+                                        <Skeleton className="h-9 w-9 rounded-full" />
                                         <div className="flex-1 space-y-2">
                                             <Skeleton className="h-4 w-24" />
                                             <Skeleton className="h-4 w-full" />
@@ -188,18 +188,29 @@ const CommentsDrawer = ({ postId, open, onOpenChange, commentCount = 0 }) => {
                                 ))}
                             </div>
                         ) : error ? (
-                            <div className="text-center py-8">
-                                <p className="text-red-500 mb-4">{error}</p>
-                                <Button onClick={loadComments}>Retry</Button>
+                            <div className="text-center py-12">
+                                <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800 mb-4">
+                                    <p className="text-red-600 dark:text-red-400 font-medium">{error}</p>
+                                </div>
+                                <Button 
+                                    onClick={loadComments}
+                                    className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium"
+                                >
+                                    Try Again
+                                </Button>
                             </div>
                         ) : commentTree.length === 0 ? (
-                            <div className="text-center py-8 text-muted-foreground">
-                                <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                <p>No comments yet</p>
-                                <p className="text-sm">Be the first to comment!</p>
+                            <div className="text-center py-16">
+                                <div className="p-6 bg-gray-50/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50">
+                                    <div className="p-4 bg-gray-200 dark:bg-gray-800 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                                        <MessageCircle className="h-8 w-8 text-gray-500" />
+                                    </div>
+                                    <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">No comments yet</h3>
+                                    <p className="text-gray-500 dark:text-gray-400 mb-4">Be the first to share your thoughts!</p>
+                                </div>
                             </div>
                         ) : (
-                            <div className="space-y-4">
+                            <div className="space-y-0">
                                 {commentTree.map((comment) => (
                                     <CommentItem
                                         key={comment.id}
@@ -216,14 +227,15 @@ const CommentsDrawer = ({ postId, open, onOpenChange, commentCount = 0 }) => {
                             </div>
                         )}
                     </div>
-                    
                     {/* Comment Form */}
-                    <div className="border-t border-border/50 p-4 bg-background">
-                        <CommentForm
-                            postId={postId}
-                            onCommentCreated={handleCommentCreated}
-                            placeholder="Write a comment..."
-                        />
+                    <div className="border-t border-gray-100 dark:border-gray-800 p-4 bg-white dark:bg-black rounded-b-2xl">
+                        <SuspensionGuard action="write comments">
+                            <CommentForm
+                                postId={postId}
+                                onCommentCreated={handleCommentCreated}
+                                placeholder="Share your thoughts..."
+                            />
+                        </SuspensionGuard>
                     </div>
                 </div>
             </DrawerContent>

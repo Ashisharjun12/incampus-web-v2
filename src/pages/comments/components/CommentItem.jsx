@@ -171,237 +171,232 @@ const CommentItem = ({
     };
 
     return (
-        <div className={cn("space-y-3", depth > 0 && "ml-6 border-l border-gray-200 dark:border-gray-800 pl-4", (comment.isPending || comment.isDeleting) && "opacity-60")}>
-            <div className="flex items-start gap-3">
-                <ProfileHoverCard userId={comment.author?.id}>
-                    <Avatar className="h-8 w-8 flex-shrink-0 cursor-pointer" onClick={e => { e.stopPropagation(); navigate(`/profile/${comment.author?.id}`); }}>
-                        <AvatarImage src={comment.author?.profile?.avatarUrl || comment.author?.googleAvatarUrl} />
-                        <AvatarFallback className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs">
-                            {comment.author?.profile?.anonymousUsername?.charAt(0).toUpperCase() || comment.author?.name?.charAt(0).toUpperCase() || comment.author?.username?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                    </Avatar>
-                </ProfileHoverCard>
-                
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                        <ProfileHoverCard userId={comment.author?.id}>
-                            <span
-                                className="font-semibold hover:underline cursor-pointer text-gray-900 dark:text-white"
-                                onClick={e => { e.stopPropagation(); navigate(`/profile/${comment.author?.id}`); }}
-                            >
-                                {comment.author?.profile?.anonymousUsername ? `@${comment.author.profile.anonymousUsername}` : (comment.author?.name || comment.author?.username || 'Unknown User')}
-                            </span>
-                        </ProfileHoverCard>
-                        <span className="text-gray-500 dark:text-gray-400 text-xs">
-                            {formatDate(comment.createdAt)}
+        <div className={cn(
+            "flex items-start gap-3 py-3 group relative border-0 border-b border-gray-100 dark:border-gray-800",
+            depth > 0 && "ml-6 pl-4 border-l-2 border-gray-100 dark:border-gray-800",
+            (comment.isPending || comment.isDeleting) && "opacity-60"
+        )}>
+            {/* Avatar and thread line */}
+            <div className="flex flex-col items-center mr-2">
+                <Avatar className="h-9 w-9 flex-shrink-0 cursor-pointer border border-gray-200 dark:border-gray-800 bg-white dark:bg-black"
+                    onClick={e => { e.stopPropagation(); navigate(`/profile/${comment.author?.id}`); }}>
+                    <AvatarImage src={comment.author?.profile?.avatarUrl || comment.author?.googleAvatarUrl} />
+                    <AvatarFallback className="bg-gray-200 text-gray-600 font-bold">
+                        {comment.author?.profile?.anonymousUsername?.charAt(0).toUpperCase() || comment.author?.name?.charAt(0).toUpperCase() || comment.author?.username?.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 w-px bg-gray-200 dark:bg-gray-800 mt-1" style={{ minHeight: 40 }} />
+            </div>
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                    <ProfileHoverCard userId={comment.author?.id}>
+                        <span className="font-semibold hover:underline cursor-pointer text-gray-900 dark:text-white text-sm"
+                            onClick={e => { e.stopPropagation(); navigate(`/profile/${comment.author?.id}`); }}>
+                            {comment.author?.profile?.anonymousUsername ? `@${comment.author.profile.anonymousUsername}` : (comment.author?.name || comment.author?.username || 'Unknown User')}
                         </span>
-                        {comment.isEdited && (
-                            <span className="text-gray-500 dark:text-gray-400 text-xs">(edited)</span>
+                    </ProfileHoverCard>
+                    <span className="text-gray-400 text-xs">{formatDate(comment.createdAt)}</span>
+                    {comment.isEdited && (
+                        <span className="text-gray-400 text-xs bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">edited</span>
+                    )}
+                </div>
+                <div className="space-y-2">
+                    {isDeleting ? (
+                        <span className="text-red-500 font-semibold">Deleting...</span>
+                    ) : (
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap text-gray-900 dark:text-white"
+                            dangerouslySetInnerHTML={{
+                                __html: comment.content.replace(/@(\w+)/g, '<span class="text-blue-500 font-medium hover:underline cursor-pointer" data-username="$1">@$1</span>')
+                            }}
+                            onClick={(e) => {
+                                if (e.target.dataset.username) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    navigate(`/profile/${e.target.dataset.username}`);
+                                }
+                            }}
+                        />
+                    )}
+                    {/* Media content */}
+                    {!isDeleting && comment.media && comment.media.length > 0 && (
+                        <div className="space-y-2 mt-2">
+                            {comment.media.map((media, index) => (
+                                <div key={index} className="relative">
+                                    <img 
+                                        src={media.url} 
+                                        alt="Media" 
+                                        className="w-full max-w-md rounded-xl border border-gray-200 dark:border-gray-700 object-cover" 
+                                        style={{ maxHeight: '300px' }}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+                {/* Actions */}
+                <div className="flex items-center gap-4 mt-2 text-gray-400">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                            "flex items-center gap-1.5 px-2 py-1 h-auto hover:text-red-500 transition-colors text-xs",
+                            liked && "text-red-500"
                         )}
-                    </div>
-                    
-                    <div className="space-y-2">
-                        {isDeleting ? (
-                            <span className="text-red-500 font-semibold">Deleting...</span>
+                        onClick={(e) => { e.stopPropagation(); handleLike(); }}
+                        disabled={isLikePending}
+                    >
+                        {isLikePending ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
                         ) : (
-                            <p 
-                                className="text-sm leading-relaxed whitespace-pre-wrap text-gray-900 dark:text-white"
-                                dangerouslySetInnerHTML={{
-                                    __html: comment.content.replace(/@(\w+)/g, '<span class="text-blue-500 font-medium hover:underline cursor-pointer" data-username="$1">@$1</span>')
-                                }}
-                                onClick={(e) => {
-                                    // Handle mention clicks
-                                    if (e.target.dataset.username) {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        navigate(`/profile/${e.target.dataset.username}`);
-                                    }
-                                }}
-                            />
+                            <Heart className={cn("h-3.5 w-3.5", liked && "fill-current")} />
                         )}
-                        
-                        {/* Media content */}
-                        {!isDeleting && comment.media && comment.media.length > 0 && (
+                        <span className="font-medium">{likeCount}</span>
+                    </Button>
+                    {depth < maxDepth && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="flex items-center gap-1.5 px-2 py-1 h-auto hover:text-blue-500 transition-colors text-xs"
+                            onClick={(e) => { e.stopPropagation(); setShowReplyForm(!showReplyForm); }}
+                        >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                            <span className="font-medium">Reply</span>
+                        </Button>
+                    )}
+                    {replies.length > 0 && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="flex items-center gap-1.5 px-2 py-1 h-auto hover:text-gray-900 transition-colors text-xs"
+                            onClick={(e) => { e.stopPropagation(); setShowReplies(v => !v); }}
+                        >
+                            <span className="font-medium">{showReplies ? 'Hide' : 'Show'} {replies.length} repl{replies.length === 1 ? 'y' : 'ies'}</span>
+                        </Button>
+                    )}
+                    {isOwner && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200" onClick={(e) => e.stopPropagation()}>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-32 bg-white dark:bg-black border border-gray-200 dark:border-gray-800">
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setShowEditForm(true); }} className="hover:bg-gray-50 dark:hover:bg-gray-900">
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                    onClick={(e) => { e.stopPropagation(); setShowDeleteDialog(true); }}
+                                    className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
+                </div>
+                {/* Reply form and edit form remain unchanged */}
+                {showReplyForm && (
+                    <div className="mt-3">
+                        <MentionInput
+                            value={replyContent}
+                            onChange={setReplyContent}
+                            placeholder="Write a reply..."
+                            onSubmit={handleReply}
+                            isSubmitting={isSubmitting}
+                            submitText="Reply"
+                            showGifButton={true}
+                            onGifClick={() => setShowGifPicker(true)}
+                            media={replyMedia}
+                            onRemoveMedia={(index) => removeMedia(index)}
+                        />
+                    </div>
+                )}
+                {showEditForm && (
+                    <div className="mt-3 space-y-2">
+                        <Textarea
+                            value={editContent}
+                            onChange={(e) => setEditContent(e.target.value)}
+                            placeholder="Edit your comment..."
+                            className="min-h-[80px] resize-none bg-white dark:bg-black border border-gray-300 dark:border-gray-700 focus:border-gray-900 dark:focus:border-gray-100 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-100 rounded-md"
+                        />
+                        {editMedia.length > 0 && (
                             <div className="space-y-2">
-                                {comment.media.map((media, index) => (
-                                    <div key={index} className="max-w-xs">
-                                        {media.type === 'gif' ? (
-                                            <img 
-                                                src={media.url} 
-                                                alt="GIF" 
-                                                className="rounded-lg max-w-full h-auto"
-                                            />
-                                        ) : (
-                                            <img 
-                                                src={media.url} 
-                                                alt="Image" 
-                                                className="rounded-lg max-w-full h-auto"
-                                            />
-                                        )}
+                                {editMedia.map((media, index) => (
+                                    <div key={index} className="relative">
+                                        <img 
+                                            src={media.url} 
+                                            alt="GIF" 
+                                            className="w-full max-w-md rounded-xl border border-gray-200 dark:border-gray-700 object-cover"
+                                            style={{ maxHeight: '200px' }}
+                                        />
+                                        <Button
+                                            size="sm"
+                                            variant="destructive"
+                                            className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full bg-white dark:bg-black border border-gray-200 dark:border-gray-700 shadow-sm"
+                                            onClick={() => removeMedia(index, true)}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
                                     </div>
                                 ))}
                             </div>
                         )}
-                    </div>
-                    
-                    <div className="flex items-center gap-4 mt-2 text-gray-500 dark:text-gray-400">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className={cn(
-                                "flex items-center gap-1 p-0 h-auto hover:text-red-500 transition-colors text-xs",
-                                liked && "text-red-500"
-                            )}
-                            onClick={(e) => { e.stopPropagation(); handleLike(); }}
-                            disabled={isLikePending}
-                        >
-                            {isLikePending ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <Heart className={cn("h-4 w-4", liked && "fill-current")} />
-                            )}
-                            <span>{likeCount}</span>
-                        </Button>
-                        
-                        {depth < maxDepth && (
+                        <div className="flex items-center gap-2">
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="flex items-center gap-1 p-0 h-auto hover:text-blue-500 transition-colors text-xs"
-                                onClick={(e) => { e.stopPropagation(); setShowReplyForm(!showReplyForm); }}
+                                onClick={(e) => { e.stopPropagation(); setShowGifPicker(true); }}
+                                className="flex items-center gap-1"
                             >
-                                <MessageCircle className="h-4 w-4" />
-                                <span>Reply</span>
+                                <Image className="h-4 w-4" />
+                                GIF
                             </Button>
-                        )}
-                        
-                        {replies.length > 0 && (
+                            <div className="flex-1" />
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="flex items-center gap-1 p-0 h-auto hover:text-blue-500 transition-colors text-xs"
-                                onClick={(e) => { e.stopPropagation(); setShowReplies(v => !v); }}
+                                onClick={(e) => { e.stopPropagation(); setShowEditForm(false); }}
                             >
-                                <span>{showReplies ? 'Hide' : 'Show'} {replies.length} repl{replies.length === 1 ? 'y' : 'ies'}</span>
+                                Cancel
                             </Button>
-                        )}
-                        
-                        {isOwner && (
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-gray-100 dark:hover:bg-gray-800" onClick={(e) => e.stopPropagation()}>
-                                        <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-32 bg-white dark:bg-black border border-gray-200 dark:border-gray-800">
-                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setShowEditForm(true); }} className="hover:bg-gray-50 dark:hover:bg-gray-900">
-                                        <Edit className="h-4 w-4 mr-2" />
-                                        Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem 
-                                        onClick={(e) => { e.stopPropagation(); setShowDeleteDialog(true); }}
-                                        className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                    >
-                                        <Trash2 className="h-4 w-4 mr-2" />
-                                        Delete
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        )}
+                            <Button
+                                size="sm"
+                                onClick={(e) => { e.stopPropagation(); handleEdit(); }}
+                                disabled={isSubmitting || (!editContent.trim() && editMedia.length === 0)}
+                            >
+                                {isSubmitting ? 'Updating...' : 'Update'}
+                            </Button>
+                        </div>
                     </div>
-                    
-                    {/* Reply form */}
-                    {showReplyForm && (
-                        <div className="mt-3">
-                            <MentionInput
-                                value={replyContent}
-                                onChange={setReplyContent}
-                                placeholder="Write a reply..."
-                                onSubmit={handleReply}
-                                isSubmitting={isSubmitting}
-                                submitText="Reply"
-                                showGifButton={true}
-                                onGifClick={() => setShowGifPicker(true)}
-                                media={replyMedia}
-                                onRemoveMedia={(index) => removeMedia(index)}
+                )}
+                {/* Replies: show directly below, indented, when showReplies is true */}
+                {showReplies && replies.length > 0 && (
+                    <div className="mt-2 space-y-0">
+                        {replies.map(reply => (
+                            <CommentItem
+                                key={reply.id}
+                                comment={reply}
+                                replies={reply.replies || []}
+                                onReply={onReply}
+                                onEdit={onEdit}
+                                onDelete={onDelete}
+                                onLike={onLike}
+                                depth={depth + 1}
+                                setComments={setComments}
                             />
-                        </div>
-                    )}
-                    
-                    {/* Edit form */}
-                    {showEditForm && (
-                        <div className="mt-3 space-y-2">
-                            <Textarea
-                                value={editContent}
-                                onChange={(e) => setEditContent(e.target.value)}
-                                placeholder="Edit your comment..."
-                                className="min-h-[80px] resize-none bg-white dark:bg-black border border-gray-300 dark:border-gray-700 focus:border-gray-900 dark:focus:border-gray-100 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-100 rounded-md"
-                            />
-                            
-                            {editMedia.length > 0 && (
-                                <div className="flex items-center gap-2">
-                                    {editMedia.map((media, index) => (
-                                        <div key={index} className="relative">
-                                            <img 
-                                                src={media.url} 
-                                                alt="GIF" 
-                                                className="h-16 w-16 object-cover rounded"
-                                            />
-                                            <Button
-                                                size="sm"
-                                                variant="destructive"
-                                                className="absolute -top-1 -right-1 h-5 w-5 p-0"
-                                                onClick={() => removeMedia(index, true)}
-                                            >
-                                                ×
-                                            </Button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                            
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={(e) => { e.stopPropagation(); setShowGifPicker(true); }}
-                                    className="flex items-center gap-1"
-                                >
-                                    <Image className="h-4 w-4" />
-                                    GIF
-                                </Button>
-                                
-                                <div className="flex-1" />
-                                
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={(e) => { e.stopPropagation(); setShowEditForm(false); }}
-                                >
-                                    Cancel
-                                </Button>
-                                
-                                <Button
-                                    size="sm"
-                                    onClick={(e) => { e.stopPropagation(); handleEdit(); }}
-                                    disabled={isSubmitting || (!editContent.trim() && editMedia.length === 0)}
-                                >
-                                    {isSubmitting ? 'Updating...' : 'Update'}
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-                </div>
+                        ))}
+                    </div>
+                )}
             </div>
-            
-            {/* Gif Picker */}
+            {/* GifPicker, Delete Dialog, and replies remain unchanged */}
             <GifPicker 
                 open={showGifPicker} 
                 onOpenChange={setShowGifPicker}
                 onSelect={showEditForm ? addGifToEdit : addGifToReply}
             />
-            
-            {/* Delete Confirmation Dialog */}
             <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                 <DialogContent className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800">
                     <DialogHeader>
@@ -418,25 +413,6 @@ const CommentItem = ({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-            
-            {/* Render replies recursively if showReplies is true */}
-            {showReplies && replies.length > 0 && (
-                <div className="mt-2 space-y-4">
-                    {replies.map(reply => (
-                        <CommentItem
-                            key={reply.id}
-                            comment={reply}
-                            replies={reply.replies || []}
-                            onReply={onReply}
-                            onEdit={onEdit}
-                            onDelete={onDelete}
-                            onLike={onLike}
-                            depth={depth + 1}
-                            setComments={setComments}
-                        />
-                    ))}
-                </div>
-            )}
         </div>
     );
 };

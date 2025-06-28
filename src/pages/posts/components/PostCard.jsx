@@ -230,29 +230,30 @@ const PostCard = ({ post, onLike, onComment, onShare, onDelete }) => {
     }
 
     return (
-        <div className="rounded-2xl backdrop-blur-xl shadow-lg border-0 pb-4 mb-6 transition-all duration-150">
+        <div className="pb-6 mb-2">
             <div className="flex items-start gap-3">
-                {/* Author Avatar */}
+                {/* Author Avatar and thread line */}
                 {post.author && (
-                    <Avatar 
-                        className="h-12 w-12 flex-shrink-0 shadow border-2 border-white dark:border-gray-800 cursor-pointer"
-                        onClick={e => {
-                            e.stopPropagation();
-                            navigate(`/profile/${post.author?.id}`);
-                        }}
-                    >
-                        <AvatarImage src={post.author.avatarUrl} />
-                        <AvatarFallback className="bg-muted text-muted-foreground">
-                            {post.author.username?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                    </Avatar>
+                    <div className="flex flex-col items-center mr-2">
+                        <Avatar 
+                            className="h-11 w-11 flex-shrink-0 cursor-pointer border border-gray-200 dark:border-gray-800 bg-white dark:bg-black"
+                            onClick={e => {
+                                e.stopPropagation();
+                                navigate(`/profile/${post.author?.id}`);
+                            }}
+                        >
+                            <AvatarImage src={post.author.avatarUrl} />
+                            <AvatarFallback className="bg-gray-200 text-gray-600 font-bold">
+                                {post.author.username?.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                        </Avatar>
+                        
+                    </div>
                 )}
-                
                 <div className="flex-1 min-w-0">
                     {/* Header */}
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-2 text-sm">
-                            {/* Username with hover card and navigation */}
                             <ProfileHoverCard userId={post.author?.id}>
                                 <span
                                     className="font-semibold hover:underline cursor-pointer"
@@ -264,7 +265,7 @@ const PostCard = ({ post, onLike, onComment, onShare, onDelete }) => {
                                     {post.author?.username || 'Unknown User'}
                                 </span>
                             </ProfileHoverCard>
-                            <div className="text-muted-foreground flex items-center gap-1">
+                            <div className="text-gray-400 flex items-center gap-1">
                                 <span>in</span>
                                 <Avatar className="h-4 w-4">
                                     <AvatarImage src={post.community?.logoUrl} alt={post.community?.name} />
@@ -272,7 +273,6 @@ const PostCard = ({ post, onLike, onComment, onShare, onDelete }) => {
                                         {post.community?.name?.charAt(0)}
                                     </AvatarFallback>
                                 </Avatar>
-                                {/* Community name with hover card and navigation */}
                                 <CommunityHoverCard communityId={post.community?.id}>
                                     <span
                                         className="hover:underline cursor-pointer"
@@ -285,12 +285,12 @@ const PostCard = ({ post, onLike, onComment, onShare, onDelete }) => {
                                     </span>
                                 </CommunityHoverCard>
                             </div>
-                            <span className="text-muted-foreground">•</span>
-                            <span className="text-muted-foreground">{formatDate(post.createdAt)}</span>
+                            <span className="text-gray-400">•</span>
+                            <span className="text-gray-400">{formatDate(post.createdAt)}</span>
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted/50" onClick={e => e.stopPropagation()}>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800" onClick={e => e.stopPropagation()}>
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -380,7 +380,6 @@ const PostCard = ({ post, onLike, onComment, onShare, onDelete }) => {
                           </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
-
                     {/* Content - Clickable area for navigation */}
                     <div 
                         className="space-y-2 cursor-pointer"
@@ -389,14 +388,13 @@ const PostCard = ({ post, onLike, onComment, onShare, onDelete }) => {
                         {renderCaption(post.caption)}
                         {renderMedia()}
                     </div>
-
                     {/* Actions */}
-                    <div className="flex items-center gap-6 mt-4 text-muted-foreground">
+                    <div className="flex items-center gap-6 mt-4 text-gray-400">
                         <Button
                             variant="ghost"
                             size="sm"
                             className={cn(
-                                "flex items-center gap-2 p-0 h-auto hover:bg-blue-100/60 dark:hover:bg-blue-900/40 rounded-full transition-colors text-lg",
+                                "flex items-center gap-2 p-0 h-auto hover:text-red-500 transition-colors text-lg",
                                 liked && "text-red-500"
                             )}
                             onClick={e => { e.stopPropagation(); handleLike(); }}
@@ -409,32 +407,29 @@ const PostCard = ({ post, onLike, onComment, onShare, onDelete }) => {
                             )}
                             <span className="text-sm">{formatCount(likeCount)}</span>
                         </Button>
-                        
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="flex items-center gap-2 p-0 h-auto hover:bg-green-100/60 dark:hover:bg-green-900/40 rounded-full transition-colors text-lg"
+                            className="flex items-center gap-2 p-0 h-auto hover:text-blue-500 transition-colors text-lg"
                             onClick={handleCommentClick}
                         >
                             <MessageCircle className="h-5 w-5" />
                             <span className="text-sm">{formatCount(post.commentCount ?? 0)}</span>
                         </Button>
-                        
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="flex items-center gap-2 p-0 h-auto hover:bg-yellow-100/60 dark:hover:bg-yellow-900/40 rounded-full transition-colors text-lg"
+                            className="flex items-center gap-2 p-0 h-auto hover:text-yellow-500 transition-colors text-lg"
                             onClick={e => { e.stopPropagation(); handleShare(); }}
                         >
                             <Upload className="h-5 w-5" />
                             <span className="text-sm">{formatCount(shareCount)}</span>
                         </Button>
-
                         <Button
                             variant="ghost"
                             size="sm"
                             className={cn(
-                                "flex items-center gap-2 p-0 h-auto hover:bg-purple-100/60 dark:hover:bg-purple-900/40 rounded-full transition-colors text-lg",
+                                "flex items-center gap-2 p-0 h-auto hover:text-purple-500 transition-colors text-lg",
                                 saved && "text-primary"
                             )}
                             onClick={e => { e.stopPropagation(); handleSaveToggle(); }}
@@ -446,7 +441,6 @@ const PostCard = ({ post, onLike, onComment, onShare, onDelete }) => {
                     </div>
                 </div>
             </div>
-
             {/* Comments Drawer */}
             <CommentsDrawer
                 postId={post.id}
@@ -454,7 +448,6 @@ const PostCard = ({ post, onLike, onComment, onShare, onDelete }) => {
                 onOpenChange={setShowComments}
                 commentCount={post.commentCount || 0}
             />
-
             {/* Delete Confirmation Dialog */}
             <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
               <AlertDialogContent>
@@ -470,7 +463,6 @@ const PostCard = ({ post, onLike, onComment, onShare, onDelete }) => {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-
             <ShareModal
                 open={showShareModal}
                 onClose={() => setShowShareModal(false)}
