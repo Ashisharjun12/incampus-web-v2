@@ -79,6 +79,15 @@ export const authAPI = {
     return api.post('/profile/onboarding', onboardingData);
   },
 
+  // Username management
+  checkUsernameAvailability: (username) => {
+    return api.get(`/profile/username/check/${username}`);
+  },
+
+  generateUniqueUsername: () => {
+    return api.get('/profile/username/generate');
+  },
+
   followUser: (targetUserId) => {
     return api.post(`/profile/follow/${targetUserId}`);
   },

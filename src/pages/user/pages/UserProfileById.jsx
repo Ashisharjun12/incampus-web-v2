@@ -17,6 +17,7 @@ import {
   Heart
 } from 'lucide-react';
 import PostCard from '../../posts/components/PostCard';
+import ProfileEditModal from './ProfileEditModal';
 
 const UserProfileById = () => {
   const { id } = useParams();
@@ -27,6 +28,7 @@ const UserProfileById = () => {
   const [posts, setPosts] = useState([]);
   const [postsLoading, setPostsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('posts');
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -149,21 +151,13 @@ const UserProfileById = () => {
                   <Button 
                     variant="outline" 
                     className="rounded-full px-6"
-                    onClick={() => navigate('/profile')}
+                    onClick={() => setShowEditModal(true)}
                   >
                     <Edit className="h-4 w-4 mr-2" />
                     Edit Profile
                   </Button>
                 )}
               </div>
-            </div>
-          </div>
-          
-          {/* Stats */}
-          <div className="flex items-center gap-8 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-gray-900 dark:text-white">{posts.length}</span>
-              <span className="text-gray-500 dark:text-gray-400">posts</span>
             </div>
           </div>
         </div>
@@ -238,6 +232,16 @@ const UserProfileById = () => {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Profile Edit Modal for own profile */}
+        {isOwnProfile && (
+          <ProfileEditModal
+            open={showEditModal}
+            onOpenChange={setShowEditModal}
+            profile={profile}
+            onProfileUpdated={setProfile}
+          />
+        )}
       </div>
     </div>
   );

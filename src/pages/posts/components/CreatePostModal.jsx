@@ -301,7 +301,7 @@ const CreatePostModal = ({ open, onOpenChange, onPostCreated }) => {
                         <Alert className="mx-5 mb-2 border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-800">
                             <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                             <AlertDescription className="text-yellow-800 dark:text-yellow-200 font-medium">
-                                <strong>NSFW Content Warning:</strong> You've enabled NSFW mode. This allows you to post 18+ content. Please comply with guidelines.
+                                <strong>NSFW Content Warning:</strong> You've enabled NSFW mode. This allows you to post 18+ content.<br/> Please comply with guidelines.
                             </AlertDescription>
                         </Alert>
                     )}
