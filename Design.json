@@ -1,0 +1,330 @@
+{
+    "designSystem": {
+      "metadata": {
+        "name": "Twitter/X Dark Theme Design System",
+        "version": "2.0",
+        "description": "Visual design system extracted from Twitter/X interface for consistent replication",
+        "primaryPlatform": "web",
+        "designLanguage": "modern_minimal"
+      },
+      "colorPalette": {
+        "background": {
+          "primary": "#000000",
+          "secondary": "#16181C",
+          "tertiary": "#1C1F23",
+          "overlay": "rgba(0, 0, 0, 0.8)"
+        },
+        "surface": {
+          "card": "#16181C",
+          "elevated": "#1C1F23",
+          "input": "#202327",
+          "hover": "#1B1F23"
+        },
+        "text": {
+          "primary": "#E7E9EA",
+          "secondary": "#71767B",
+          "muted": "#555555",
+          "inverse": "#0F1419"
+        },
+        "accent": {
+          "brand": "#1D9BF0",
+          "brandHover": "#1A8CD8",
+          "success": "#00BA7C",
+          "warning": "#FFD400",
+          "error": "#F4212E"
+        },
+        "interactive": {
+          "like": "#F91880",
+          "retweet": "#00BA7C",
+          "reply": "#1D9BF0",
+          "share": "#1D9BF0"
+        }
+      },
+      "typography": {
+        "fontFamily": {
+          "primary": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+          "fallback": "system-ui, sans-serif"
+        },
+        "fontSizes": {
+          "xs": "12px",
+          "sm": "13px",
+          "base": "15px",
+          "lg": "17px",
+          "xl": "20px",
+          "2xl": "24px",
+          "3xl": "31px"
+        },
+        "fontWeights": {
+          "normal": 400,
+          "medium": 500,
+          "semibold": 600,
+          "bold": 700,
+          "extrabold": 800
+        },
+        "lineHeights": {
+          "tight": 1.2,
+          "normal": 1.3,
+          "relaxed": 1.5
+        }
+      },
+      "spacing": {
+        "scale": [0, 4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96],
+        "component": {
+          "cardPadding": "16px",
+          "sectionGap": "20px",
+          "elementGap": "12px",
+          "tightGap": "8px"
+        }
+      },
+      "borderRadius": {
+        "none": "0px",
+        "sm": "4px",
+        "base": "8px",
+        "lg": "12px",
+        "xl": "16px",
+        "full": "9999px"
+      },
+      "shadows": {
+        "card": "rgba(255, 255, 255, 0.2) 0px 0px 15px, rgba(255, 255, 255, 0.15) 0px 0px 3px 1px",
+        "hover": "rgba(255, 255, 255, 0.1) 0px 0px 15px",
+        "modal": "rgba(255, 255, 255, 0.2) 0px 0px 20px"
+      },
+      "layout": {
+        "structure": {
+          "type": "three_column",
+          "columns": {
+            "sidebar": {
+              "width": "275px",
+              "position": "fixed_left",
+              "background": "background.primary"
+            },
+            "main": {
+              "width": "600px",
+              "position": "center",
+              "background": "background.primary"
+            },
+            "aside": {
+              "width": "350px",
+              "position": "fixed_right",
+              "background": "background.primary"
+            }
+          }
+        },
+        "containers": {
+          "maxWidth": "1200px",
+          "centerAlign": true,
+          "responsive": {
+            "mobile": "single_column",
+            "tablet": "two_column",
+            "desktop": "three_column"
+          }
+        }
+      },
+      "components": {
+        "navigation": {
+          "type": "sidebar",
+          "style": {
+            "background": "background.primary",
+            "padding": "spacing.component.cardPadding",
+            "borderRadius": "borderRadius.none"
+          },
+          "logo": {
+            "size": "32px",
+            "color": "text.primary",
+            "position": "top_left"
+          },
+          "menuItems": {
+            "padding": "12px 16px",
+            "borderRadius": "borderRadius.full",
+            "hoverBackground": "surface.hover",
+            "activeBackground": "surface.elevated"
+          }
+        },
+        "cards": {
+          "primary": {
+            "background": "surface.card",
+            "border": "1px solid #2F3336",
+            "borderRadius": "borderRadius.base",
+            "padding": "spacing.component.cardPadding",
+            "transition": "all 0.2s ease"
+          },
+          "profile": {
+            "background": "surface.card",
+            "borderRadius": "borderRadius.lg",
+            "padding": "spacing.component.cardPadding",
+            "hasAvatar": true,
+            "avatarSize": "48px"
+          },
+          "trending": {
+            "background": "surface.card",
+            "borderRadius": "borderRadius.xl",
+            "padding": "spacing.component.cardPadding",
+            "itemPadding": "12px 16px"
+          }
+        },
+        "posts": {
+          "container": {
+            "background": "surface.card",
+            "borderBottom": "1px solid #2F3336",
+            "padding": "12px 16px",
+            "hoverBackground": "rgba(255, 255, 255, 0.03)"
+          },
+          "avatar": {
+            "size": "40px",
+            "borderRadius": "borderRadius.full",
+            "position": "top_left"
+          },
+          "content": {
+            "marginLeft": "52px",
+            "lineHeight": "lineHeights.normal"
+          },
+          "actions": {
+            "display": "flex",
+            "justifyContent": "space_between",
+            "marginTop": "spacing.component.elementGap",
+            "iconSize": "18px"
+          }
+        },
+        "buttons": {
+          "primary": {
+            "background": "accent.brand",
+            "color": "white",
+            "borderRadius": "borderRadius.full",
+            "padding": "8px 24px",
+            "fontWeight": "fontWeights.bold",
+            "hoverBackground": "accent.brandHover"
+          },
+          "secondary": {
+            "background": "transparent",
+            "color": "text.primary",
+            "border": "1px solid #536471",
+            "borderRadius": "borderRadius.full",
+            "padding": "8px 24px",
+            "fontWeight": "fontWeights.bold"
+          },
+          "ghost": {
+            "background": "transparent",
+            "color": "text.secondary",
+            "padding": "8px",
+            "borderRadius": "borderRadius.full",
+            "hoverBackground": "rgba(255, 255, 255, 0.1)"
+          }
+        },
+        "forms": {
+          "input": {
+            "background": "surface.input",
+            "border": "1px solid #333639",
+            "borderRadius": "borderRadius.base",
+            "padding": "12px 16px",
+            "color": "text.primary",
+            "focusBorder": "2px solid accent.brand"
+          },
+          "textarea": {
+            "background": "transparent",
+            "border": "none",
+            "color": "text.primary",
+            "fontSize": "fontSizes.xl",
+            "lineHeight": "lineHeights.normal",
+            "placeholder": "text.secondary"
+          }
+        }
+      },
+      "interactions": {
+        "hover": {
+          "transition": "all 0.2s ease",
+          "backgroundOpacity": 0.1,
+          "scaleTransform": "scale(1.02)"
+        },
+        "focus": {
+          "outline": "2px solid accent.brand",
+          "outlineOffset": "2px"
+        },
+        "active": {
+          "transform": "scale(0.98)",
+          "transition": "transform 0.1s ease"
+        }
+      },
+      "responsive": {
+        "breakpoints": {
+          "mobile": "320px",
+          "tablet": "768px",
+          "desktop": "1024px",
+          "widescreen": "1280px"
+        },
+        "adaptations": {
+          "mobile": {
+            "layout": "single_column",
+            "navigation": "bottom_tabs",
+            "cardPadding": "12px"
+          },
+          "tablet": {
+            "layout": "two_column",
+            "sidebarCollapsed": true
+          },
+          "desktop": {
+            "layout": "three_column",
+            "fullNavigation": true
+          }
+        }
+      },
+      "animations": {
+        "durations": {
+          "fast": "150ms",
+          "normal": "200ms",
+          "slow": "300ms"
+        },
+        "easings": {
+          "default": "cubic-bezier(0.4, 0, 0.2, 1)",
+          "bounce": "cubic-bezier(0.68, -0.55, 0.265, 1.55)"
+        },
+        "effects": {
+          "fadeIn": {
+            "opacity": "0 to 1",
+            "duration": "durations.normal"
+          },
+          "slideUp": {
+            "transform": "translateY(10px) to translateY(0)",
+            "duration": "durations.normal"
+          },
+          "scale": {
+            "transform": "scale(0.95) to scale(1)",
+            "duration": "durations.fast"
+          }
+        }
+      },
+      "patterns": {
+        "composition": {
+          "cardGrid": {
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": "spacing.component.tightGap"
+          },
+          "twoColumnLayout": {
+            "display": "grid",
+            "gridTemplateColumns": "1fr 350px",
+            "gap": "spacing.component.sectionGap"
+          },
+          "avatarWithContent": {
+            "display": "flex",
+            "gap": "spacing.component.elementGap",
+            "alignItems": "flex-start"
+          }
+        },
+        "microcopy": {
+          "timestamps": {
+            "color": "text.secondary",
+            "fontSize": "fontSizes.sm"
+          },
+          "usernames": {
+            "color": "text.secondary",
+            "fontSize": "fontSizes.sm",
+            "fontWeight": "fontWeights.normal"
+          },
+          "counters": {
+            "color": "text.secondary",
+            "fontSize": "fontSizes.sm"
+          }
+        }
+      }
+    }
+  }

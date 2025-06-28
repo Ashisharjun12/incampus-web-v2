@@ -1,0 +1,22 @@
+{
+  "Campus Life": {
+    "icon": "🏫",
+    "topics": ["exams", "notes", "hostel", "events", "confessions", "clubs", "placements"]
+  },
+  "Fun & Entertainment": {
+    "icon": "🎉",
+    "topics": ["masti", "memes", "movies", "music", "gaming", "stand-up"]
+  },
+  "Hobbies & Interests": {
+    "icon": "🎨",
+    "topics": ["anime-manga", "art", "tech", "sports", "fashion", "food", "photography", "books"]
+  },
+  "Professional & Academic": {
+    "icon": "💼",
+    "topics": ["programming", "startups", "business", "science", "design"]
+  },
+  "Adult": {
+    "icon": "🔞",
+    "topics": ["18+", "relationships"]
+  }
+} 
