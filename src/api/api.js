@@ -329,7 +329,7 @@ export const commentAPI = {
 export const giphyAPI = {
   // Search GIFs
   search: (query, params = {}) => {
-    const apiKey = import.meta.env.VITE_GIPHY_API_KEY || "F1gvwC02jncYASNOcHScU7J3tNH37zRk";
+    const apiKey = import.meta.env.VITE_GIPHY_API_KEY ;
     const defaultParams = {
       api_key: apiKey,
       q: query,
