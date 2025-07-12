@@ -24,7 +24,7 @@ import EditPostPage from './pages/posts/pages/EditPostPage';
 import SavedPostsPage from './pages/posts/pages/SavedPostsPage';
 import PostDetail from './pages/posts/pages/PostDetail';
 import SuspendedUser from './components/SuspendedUser';
-import SuspensionGuard from './components/SuspensionGuard';
+
 
 const App = () => {
   const { authUser, isLoading, isSuspended, checkAuth } = useAuthStore();
@@ -88,7 +88,7 @@ const App = () => {
 
       {/* Main app routes with navigation */}
       <Route path='/' element={<Layout />}>
-        <Route index element={<Home />} />
+        <Route index element={authUser ? <Home /> : <Navigate to="/login" replace />} />
         
         {/* Protected routes that require complete profile */}
         <Route element={<ProtectedRoutes />}>
